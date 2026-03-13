@@ -14,11 +14,11 @@ export default function useTasks() {
     setTasks([...tasks, newTask])
   }
 
-  const toggleTask = (id) => {
+  const toggleTask = (id, checked) => {
     setTasks(
       tasks.map((task) =>
         task.id === id
-          ? { ...task, completed: !task.completed }
+          ? { ...task, completed: checked }
           : task
       )
     )
