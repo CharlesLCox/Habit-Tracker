@@ -13,7 +13,7 @@ import { login } from "../services/auth"
 
 export default function Login() {
   const navigate = useNavigate()
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
@@ -24,7 +24,7 @@ export default function Login() {
     setLoading(true)
 
     try {
-      await login(email, password)
+      await login(username, password)
       navigate("/")
     } catch (err) {
         console.error("Login error:", err)
@@ -42,16 +42,14 @@ export default function Login() {
 
       <form onSubmit={handleSubmit}>
         <Stack gap="4">
-          <Field.Root>
-            <Field.Label>Email</Field.Label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-            />
-          </Field.Root>
-
+            <Field.Root>
+                <Field.Label>Username</Field.Label>
+                <Input
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter your username"
+                />
+            </Field.Root>
           <Field.Root>
             <Field.Label>Password</Field.Label>
             <Input

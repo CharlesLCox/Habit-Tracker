@@ -7,12 +7,12 @@ import {
     region: import.meta.env.VITE_COGNITO_REGION,
   })
   
-  export async function login(email, password) {
+  export async function login(username, password) {
     const command = new InitiateAuthCommand({
       AuthFlow: "USER_PASSWORD_AUTH",
       ClientId: import.meta.env.VITE_COGNITO_CLIENT_ID,
       AuthParameters: {
-        USERNAME: email,
+        USERNAME: username,
         PASSWORD: password,
       },
     })
