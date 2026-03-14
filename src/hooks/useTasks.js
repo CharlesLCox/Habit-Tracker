@@ -43,5 +43,25 @@ export default function useTasks() {
     )
   }
 
-  return { tasks, addTask, toggleTask, removeTask }
+  const reorderTask = (draggedTaskId, targetTaskId) => {
+    if (!draggedTaskId || !targetTaskId || draggedTaskId === targetTaskId) {
+      return
+    }
+
+    setTasks((prev) => {
+      const draggedIndex = prev.findIndex((task) => task.taskId === draggedTaskId)
+      const targetIndex = prev.findIndex((task) => task.taskId === targetTaskId)
+
+      if (draggedIndex === -1 || targetIndex === -1) {
+        return prev
+      }
+
+      const next = [...prev]
+      const [movedTask] = next.splice(draggedIndex, 1)
+      next.splice(targetIndex, 0, movedTask)
+      return next
+    })
+  }
+
+  return { tasks, addTask, toggleTask, removeTask, reorderTask }
 }

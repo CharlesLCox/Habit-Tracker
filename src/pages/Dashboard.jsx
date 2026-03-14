@@ -6,7 +6,7 @@ import useTasks from "../hooks/useTasks"
 
 
 export default function Dashboard() {
-  const { tasks, addTask, toggleTask, removeTask } = useTasks()
+  const { tasks, addTask, toggleTask, removeTask, reorderTask } = useTasks()
 
   return (
     <>
@@ -15,7 +15,12 @@ export default function Dashboard() {
       <Box maxW="600px" mx="auto" mt={10}>
         <Heading mb={6}>My Tasks</Heading>
         <TaskForm onAdd={addTask} />
-        <TaskList tasks={tasks} toggle={toggleTask} remove={removeTask} />
+        <TaskList
+          tasks={tasks}
+          toggle={toggleTask}
+          remove={removeTask}
+          reorder={reorderTask}
+        />
       </Box>
     </>
   )

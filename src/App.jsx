@@ -12,6 +12,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/confirm-registration" element={<Login />} />
         <Route
           path="/"
           element={
