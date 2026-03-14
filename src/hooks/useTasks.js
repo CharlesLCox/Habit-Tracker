@@ -1,28 +1,47 @@
-import { useState } from "react"
-import { v4 as uuid } from "uuid"
+import { useEffect, useState } from "react"
+import { createTask, deleteTask, getTasks } from "../services/api"
 
 export default function useTasks() {
   const [tasks, setTasks] = useState([])
 
-  const addTask = (title) => {
-    const newTask = {
-      id: uuid(),
-      title,
-      completed: false
+  useEffect(() => {
+    async function loadTasks() {
+      try {
+        const data = await getTasks()
+        setTasks(data)
+      } catch (error) {
+        console.error("Failed to load tasks:", error)
+      }
     }
 
-    setTasks([...tasks, newTask])
+    loadTasks()
+  }, [])
+
+  const addTask = async (title) => {
+    try {
+      const newTask = await createTask(title)
+      setTasks((prev) => [...prev, newTask])
+    } catch (error) {
+      console.error("Failed to create task:", error)
+    }
   }
 
-  const toggleTask = (id, checked) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === id
-          ? { ...task, completed: checked }
-          : task
+  const removeTask = async (taskId) => {
+    try {
+      await deleteTask(taskId)
+      setTasks((prev) => prev.filter((task) => task.taskId !== taskId))
+    } catch (error) {
+      console.error("Failed to delete task:", error)
+    }
+  }
+
+  const toggleTask = (taskId, checked) => {
+    setTasks((prev) =>
+      prev.map((task) =>
+        task.taskId === taskId ? { ...task, completed: checked } : task
       )
     )
   }
 
-  return { tasks, addTask, toggleTask }
+  return { tasks, addTask, toggleTask, removeTask }
 }

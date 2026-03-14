@@ -1,19 +1,22 @@
 import { Box, Heading } from "@chakra-ui/react"
 import TaskForm from "../components/tasks/TaskForm"
 import TaskList from "../components/tasks/TaskList"
+import Navbar from "../components/navigation/Navbar"
 import useTasks from "../hooks/useTasks"
 
 
 export default function Dashboard() {
-    const { tasks, addTask, toggleTask } = useTasks()
-  
-    return (
+  const { tasks, addTask, toggleTask, removeTask } = useTasks()
+
+  return (
+    <>
+      <Navbar />
+
       <Box maxW="600px" mx="auto" mt={10}>
-        <Heading mb={6}>Task Tracker</Heading>
-  
+        <Heading mb={6}>My Tasks</Heading>
         <TaskForm onAdd={addTask} />
-  
-        <TaskList tasks={tasks} toggle={toggleTask} />
+        <TaskList tasks={tasks} toggle={toggleTask} remove={removeTask} />
       </Box>
-    )
-  }
+    </>
+  )
+}

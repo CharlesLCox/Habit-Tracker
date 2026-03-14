@@ -7,13 +7,50 @@ export async function getTasks() {
 
   const res = await fetch(`${API_URL}/tasks`, {
     headers: {
-      Authorization: `Bearer ${auth?.accessToken ?? ""}`,
+      Authorization: `Bearer ${auth?.idToken ?? ""}`,
       "Content-Type": "application/json",
     },
   })
 
   if (!res.ok) {
-    throw new Error("Failed to fetch tasks")
+    throw new Error(`Failed to fetch tasks: ${res.status}`)
+  }
+
+  return res.json()
+}
+
+export async function createTask(title) {
+  const auth = getAuth()
+
+  const res = await fetch(`${API_URL}/tasks`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${auth?.idToken ?? ""}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ title }),
+  })
+
+  if (!res.ok) {
+    throw new Error(`Failed to create task: ${res.status}`)
+  }
+
+  return res.json()
+}
+
+export async function deleteTask(taskId) {
+  const auth = getAuth()
+
+  const res = await fetch(`${API_URL}/tasks/${taskId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${auth?.idToken ?? ""}`,
+      "Content-Type": "application/json",
+    },
+  })
+
+  if (!res.ok) {
+    throw new Error(`Failed to delete task: ${res.status}`)
   }
 
   return res.json()

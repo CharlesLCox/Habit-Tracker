@@ -5,8 +5,8 @@ codeuri = "C:\\Users\\17325\\TaskTrackerApp\\task-tracker\\backend\\tasktracker"
 runtime = "nodejs20.x"
 architecture = "x86_64"
 handler = "src/handlers/get-all-items.getAllItemsHandler"
-manifest_hash = "1334517788139c8510cef92e384bef12"
+manifest_hash = "ee290a0c319d23335b4026c9f83c4881"
 packagetype = "Zip"
-functions = ["getAllItemsFunction", "getByIdFunction", "putItemFunction"]
+functions = ["GetTasksFunction", "CreateTaskFunction", "DeleteTaskFunction"]
 
 [layer_build_definitions]

@@ -1,23 +1,29 @@
-import { Box, HStack, Checkbox } from "@chakra-ui/react"
+import { Box, HStack, Checkbox, Button } from "@chakra-ui/react"
 
-export default function TaskCard({ task, toggle }) {
+export default function TaskCard({ task, toggle, remove }) {
   return (
     <Box p={3} borderWidth="1px" borderRadius="md" mb={2}>
-      <HStack>
-    <Checkbox.Root
-              checked={task.completed}
-              onCheckedChange={(details) => toggle(task.id, details.checked)}
-    >
-    <Checkbox.HiddenInput />
-        <Checkbox.Control>
-            <Checkbox.Indicator />
-            </Checkbox.Control>
-            <Checkbox.Label
+      <HStack justify="space-between">
+        <Checkbox.Root
+          checked={task.completed}
+          onCheckedChange={(details) => toggle(task.taskId, details.checked)}
+        >
+          <Checkbox.Control />
+          <Checkbox.Label
             textDecoration={task.completed ? "line-through" : "none"}
           >
             {task.title}
           </Checkbox.Label>
-    </Checkbox.Root>
+        </Checkbox.Root>
+
+        <Button
+          size="xs"
+          colorScheme="red"
+          variant="outline"
+          onClick={() => remove(task.taskId)}
+        >
+          Delete
+        </Button>
       </HStack>
     </Box>
   )
