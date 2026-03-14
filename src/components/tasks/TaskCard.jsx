@@ -17,28 +17,46 @@ export default function TaskCard({
       borderWidth="1px"
       borderRadius="md"
       mb={2}
-      draggable={draggable}
-      onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDrop={onDrop}
-      onDragEnd={onDragEnd}
       borderColor={isDragOver ? "blue.400" : undefined}
       bg={isDragOver ? "blue.50" : undefined}
-      cursor={draggable ? "grab" : "default"}
-      _active={draggable ? { cursor: "grabbing" } : undefined}
     >
       <HStack justify="space-between">
-        <Checkbox.Root
-          checked={task.completed}
-          onCheckedChange={(details) => toggle(task.taskId, details.checked)}
-        >
-          <Checkbox.Control />
-          <Checkbox.Label
-            textDecoration={task.completed ? "line-through" : "none"}
+        <HStack gap={3}>
+          <Box
+            as="span"
+            draggable={draggable}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            cursor={draggable ? "grab" : "default"}
+            _active={draggable ? { cursor: "grabbing" } : undefined}
+            userSelect="none"
+            title={draggable ? "Drag to reorder" : undefined}
+            color="gray.500"
+            fontWeight="bold"
+            px={1}
           >
-            {task.title}
-          </Checkbox.Label>
-        </Checkbox.Root>
+            ::
+          </Box>
+
+          <Checkbox.Root
+            checked={task.completed === true}
+            onCheckedChange={(details) =>
+              toggle(task.taskId, details.checked === true)
+            }
+          >
+            <Checkbox.HiddenInput />
+            <Checkbox.Control>
+              <Checkbox.Indicator />
+            </Checkbox.Control>
+            <Checkbox.Label
+              textDecoration={task.completed ? "line-through" : "none"}
+            >
+              {task.title}
+            </Checkbox.Label>
+          </Checkbox.Root>
+        </HStack>
 
         <Button
           size="xs"

@@ -21,7 +21,13 @@ export default function TaskList({ tasks = [], toggle, remove, reorder }) {
           remove={remove}
           draggable={canDrag}
           isDragOver={dragOverTaskId === task.taskId}
-          onDragStart={() => setDraggedTaskId(task.taskId)}
+          onDragStart={(event) => {
+            setDraggedTaskId(task.taskId)
+            if (event?.dataTransfer) {
+              event.dataTransfer.effectAllowed = "move"
+              event.dataTransfer.setData("text/plain", task.taskId)
+            }
+          }}
           onDragOver={(event) => {
             if (!canDrag || !draggedTaskId) {
               return

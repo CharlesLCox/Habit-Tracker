@@ -1,4 +1,13 @@
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom"
+import { Box, Flex, useMediaQuery } from "@chakra-ui/react"
+import { AnimatePresence, motion } from "framer-motion"
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useOutlet,
+} from "react-router-dom"
 import Navbar from "./components/navigation/Navbar"
 import Dashboard from "./pages/Dashboard"
 import Habits from "./pages/Habits"
@@ -7,16 +16,43 @@ import Settings from "./pages/Settings"
 import Statistics from "./pages/Statistics"
 import { isAuthenticated } from "./services/auth"
 
+const MotionDiv = motion.div
+
 function ProtectedLayout() {
-  if (!isAuthenticated()) {
+  const location = useLocation()
+  const outlet = useOutlet()
+  const authenticated = isAuthenticated()
+  const [isLandscape] = useMediaQuery("(orientation: landscape)")
+  const [isMobile] = useMediaQuery("(max-width: 768px)")
+  const isSideNav = isLandscape && !isMobile
+
+  if (!authenticated) {
     return <Navigate to="/login" replace />
   }
 
   return (
-    <>
-      <Navbar />
-      <Outlet />
-    </>
+    <Flex minH="100vh" direction={isSideNav ? "row" : "column"}>
+      <Navbar isSideNav={isSideNav} />
+      <Box flex="1" overflow="hidden">
+        <AnimatePresence mode="wait" initial={false}>
+          <MotionDiv
+            key={location.pathname}
+            style={{ width: "100%" }}
+            variants={{
+              enter: { opacity: 0 },
+              center: { opacity: 1 },
+              exit: { opacity: 0 },
+            }}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.45, ease: "easeInOut" }}
+          >
+            {outlet}
+          </MotionDiv>
+        </AnimatePresence>
+      </Box>
+    </Flex>
   )
 }
 
