@@ -3,6 +3,7 @@ import { createTask, deleteTask, getTasks } from "../services/api"
 
 export default function useTasks() {
   const [tasks, setTasks] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     async function loadTasks() {
@@ -11,6 +12,8 @@ export default function useTasks() {
         setTasks(data)
       } catch (error) {
         console.error("Failed to load tasks:", error)
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -63,5 +66,5 @@ export default function useTasks() {
     })
   }
 
-  return { tasks, addTask, toggleTask, removeTask, reorderTask }
+  return { tasks, isLoading, addTask, toggleTask, removeTask, reorderTask }
 }

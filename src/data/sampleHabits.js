@@ -1,0 +1,45 @@
+export const sampleHabits = [
+  {
+    id: "habit-1",
+    name: "Morning Walk",
+    description: "Walk for at least 20 minutes before work.",
+    category: "Health",
+    activeDays: ["Monday", "Wednesday", "Friday", "Sunday"],
+  },
+  {
+    id: "habit-2",
+    name: "Read 30 Minutes",
+    description: "Read a book chapter or article without phone distractions.",
+    category: "Learning",
+    activeDays: ["Tuesday", "Thursday", "Saturday"],
+  },
+  {
+    id: "habit-3",
+    name: "Hydration Check",
+    description: "Track water intake and finish at least 2 liters.",
+    category: "Selfcare",
+    activeDays: [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ],
+  },
+  {
+    id: "habit-4",
+    name: "Daily Planning",
+    description: "Plan top 3 priorities for tomorrow in under 10 minutes.",
+    category: "Productivity",
+    activeDays: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
+  },
+  {
+    id: "habit-5",
+    name: "Reach Out to Friend",
+    description: "Send one thoughtful message or call someone in your circle.",
+    category: "Social",
+    activeDays: ["Tuesday", "Friday", "Saturday"],
+  },
+]

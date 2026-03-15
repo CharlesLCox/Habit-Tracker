@@ -3,42 +3,60 @@ import {
   Badge,
   Box,
   Button,
-  Checkbox,
   Dialog,
   Grid,
   HStack,
+  Menu,
   Portal,
   Text,
-  VStack,
 } from "@chakra-ui/react"
 import dayjs from "dayjs"
 import { motion, useAnimationControls } from "framer-motion"
-import { Trash2 } from "lucide-react"
+import { Check, Menu as MenuIcon, Pencil, Plus, Trash2 } from "lucide-react"
 
 const MotionDiv = motion.div
-const GREEN_RGB = [34, 197, 94]
-const ORANGE_RGB = [249, 115, 22]
-const RED_RGB = [239, 68, 68]
+
+const categoryStyleByName = {
+  health: { label: "Health", palette: "green", rgb: [34, 197, 94] },
+  learning: { label: "Learning", palette: "blue", rgb: [59, 130, 246] },
+  productivity: { label: "Productivity", palette: "purple", rgb: [168, 85, 247] },
+  social: { label: "Social", palette: "orange", rgb: [249, 115, 22] },
+  selfcare: { label: "Selfcare", palette: "cyan", rgb: [6, 182, 212] },
+}
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value))
-}
-
-function interpolateColor(start, end, t) {
-  return start.map((startChannel, index) => {
-    const endChannel = end[index]
-    return Math.round(startChannel + (endChannel - startChannel) * t)
-  })
 }
 
 function toRgbString(rgbChannels) {
   return `rgb(${rgbChannels[0]}, ${rgbChannels[1]}, ${rgbChannels[2]})`
 }
 
-function darkenColor(rgbChannels, amount = 0.18) {
+function darkenColor(rgbChannels, amount = 0.12) {
   return rgbChannels.map((channel) => {
     return Math.round(channel * (1 - amount))
   })
+}
+
+function desaturateColor(rgbChannels, amount = 0) {
+  const gray = Math.round(
+    rgbChannels[0] * 0.299 + rgbChannels[1] * 0.587 + rgbChannels[2] * 0.114
+  )
+
+  return rgbChannels.map((channel) => {
+    return Math.round(channel * (1 - amount) + gray * amount)
+  })
+}
+
+function normalizeCategoryKey(category) {
+  return String(category || "")
+    .toLowerCase()
+    .replace(/\s+/g, "")
+}
+
+function getCategoryStyle(category) {
+  const key = normalizeCategoryKey(category)
+  return categoryStyleByName[key] || categoryStyleByName.productivity
 }
 
 function getTimeLeftRatio(task, nowMs) {
@@ -69,18 +87,14 @@ function getTimeLeftRatio(task, nowMs) {
   return clamp(remainingMs / totalMs, 0, 1)
 }
 
-function getProgressBackgroundRgb(ratio) {
+function getProgressOverlayRgb(categoryRgb, ratio) {
   if (ratio == null) {
     return null
   }
 
-  if (ratio >= 0.3) {
-    const t = (1 - ratio) / 0.7
-    return interpolateColor(GREEN_RGB, ORANGE_RGB, clamp(t, 0, 1))
-  }
-
-  const t = (0.3 - ratio) / 0.3
-  return interpolateColor(ORANGE_RGB, RED_RGB, clamp(t, 0, 1))
+  const desaturationAmount = clamp(1 - ratio, 0, 1) * 0.78
+  const desaturated = desaturateColor(categoryRgb, desaturationAmount)
+  return darkenColor(desaturated, 0.1)
 }
 
 function formatTimeLeft(dueDate, nowMs) {
@@ -146,9 +160,9 @@ function getShakeConfig(ratio) {
     }
   }
 
-  if (ratio <= 0.5) {
+  if (ratio <= 0.3) {
     return {
-      intervalMs: 100000,
+      intervalMs: 10000,
       amplitude: 4,
       rotate: 1,
       duration: 0.42,
@@ -170,18 +184,40 @@ export default function TaskCard({
   onDragEnd,
 }) {
   const [nowMs, setNowMs] = useState(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+
+  const isCompleted = task.completed === true
+  const categoryStyle = getCategoryStyle(task.category)
   const timeLeftRatio = getTimeLeftRatio(task, nowMs)
-  const progressBgRgb = getProgressBackgroundRgb(timeLeftRatio)
-  const progressBarRgb = progressBgRgb ? darkenColor(progressBgRgb, 0.18) : null
-  const progressBgColor = progressBgRgb ? toRgbString(progressBgRgb) : null
+  const progressBarRgb = getProgressOverlayRgb(categoryStyle.rgb, timeLeftRatio)
   const progressBarColor = progressBarRgb ? toRgbString(progressBarRgb) : null
   const progressFillWidth =
     timeLeftRatio == null ? "0%" : `${Math.round(clamp(timeLeftRatio, 0, 1) * 10000) / 100}%`
-  const hasProgressBackground = !!progressBgColor && !isDragOver
+  const hasProgressOverlay = !!progressBarColor && !isDragOver
+
   const shakeConfig = useMemo(() => getShakeConfig(timeLeftRatio), [timeLeftRatio])
   const shakeControls = useAnimationControls()
   const countdownText = formatTimeLeft(task.dueDate, nowMs)
   const dueDateLabel = formatDueDateLabel(task.dueDate)
+
+  const cardBackgroundColor = isCompleted
+    ? `${categoryStyle.palette}.600`
+    : `${categoryStyle.palette}.300`
+  const cardBorderColor = isCompleted
+    ? `${categoryStyle.palette}.800`
+    : `${categoryStyle.palette}.600`
+  const metaTagBg = isCompleted ? "whiteAlpha.300" : "whiteAlpha.200"
+
+  function runCompleteShake() {
+    shakeControls.start({
+      x: [0, -8, 8, -6, 6, 0],
+      rotate: [0, -1.2, 1.2, -0.9, 0.9, 0],
+      transition: {
+        duration: 0.38,
+        ease: "easeInOut",
+      },
+    })
+  }
 
   useEffect(() => {
     const kickOff = setTimeout(() => {
@@ -248,13 +284,18 @@ export default function TaskCard({
         overflow="hidden"
         onDragOver={onDragOver}
         onDrop={onDrop}
-        borderColor={isDragOver ? "blue.400" : undefined}
-        bg={isDragOver ? "blue.50" : progressBgColor || undefined}
-        color={hasProgressBackground ? "white" : undefined}
-        transition="background-color 1s linear"
+        borderColor={isDragOver ? "blue.400" : cardBorderColor}
+        bg={isDragOver ? "blue.50" : cardBackgroundColor}
+        color="white"
+        boxShadow="0 6px 18px rgba(15, 23, 42, 0.14), 0 1px 3px rgba(15, 23, 42, 0.1)"
+        transition="background-color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1), transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)"
+        _hover={{
+          boxShadow: "0 14px 34px rgba(15, 23, 42, 0.2), 0 4px 10px rgba(15, 23, 42, 0.12)",
+          transform: "translateY(-3px)",
+        }}
         w="100%"
       >
-        {hasProgressBackground ? (
+        {hasProgressOverlay ? (
           <Box
             position="absolute"
             left={0}
@@ -268,127 +309,196 @@ export default function TaskCard({
           />
         ) : null}
 
-        <Grid
-          templateRows="auto 1fr auto"
-          alignItems="stretch"
-          w="100%"
-          h="100%"
-          gap={2}
+        <Menu.Root positioning={{ placement: "bottom-end" }}>
+          <Menu.Trigger asChild>
+            <Button
+              size="xs"
+              variant="outline"
+              aria-label="Open task actions"
+              borderColor="whiteAlpha.700"
+              color="white"
+              _hover={{ bg: "whiteAlpha.200" }}
+              position="absolute"
+              top="4"
+              right="4"
+              zIndex={2}
+            >
+              <MenuIcon size={16} color="currentColor" />
+            </Button>
+          </Menu.Trigger>
+          <Portal>
+            <Menu.Positioner>
+              <Menu.Content minW="150px">
+                <Menu.Item value={`edit-${task.taskId}`} disabled>
+                  <HStack gap={2}>
+                    <Pencil size={14} />
+                    <Text>Edit (coming soon)</Text>
+                  </HStack>
+                </Menu.Item>
+                <Menu.Item
+                  value={`delete-${task.taskId}`}
+                  color="red.500"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                >
+                  <HStack gap={2}>
+                    <Trash2 size={14} />
+                    <Text>Delete</Text>
+                  </HStack>
+                </Menu.Item>
+              </Menu.Content>
+            </Menu.Positioner>
+          </Portal>
+        </Menu.Root>
+
+        <Dialog.Root
+          open={isDeleteDialogOpen}
+          onOpenChange={(details) => setIsDeleteDialogOpen(details.open)}
+        >
+          <Portal>
+            <Dialog.Backdrop />
+            <Dialog.Positioner>
+              <Dialog.Content>
+                <Dialog.Header>
+                  <Dialog.Title>Delete task?</Dialog.Title>
+                </Dialog.Header>
+                <Dialog.Body>
+                  <Dialog.Description>
+                    Are you sure you want to delete "{task.title}"?
+                  </Dialog.Description>
+                </Dialog.Body>
+                <Dialog.Footer>
+                  <Dialog.ActionTrigger asChild>
+                    <Button variant="outline">Cancel</Button>
+                  </Dialog.ActionTrigger>
+                  <Button
+                    colorScheme="red"
+                    onClick={() => {
+                      remove(task.taskId)
+                      setIsDeleteDialogOpen(false)
+                    }}
+                  >
+                    Confirm delete
+                  </Button>
+                </Dialog.Footer>
+              </Dialog.Content>
+            </Dialog.Positioner>
+          </Portal>
+        </Dialog.Root>
+
+        <Button
+          w="70px"
+          h="70px"
+          minW="70px"
+          position="absolute"
+          right="4"
+          top="50%"
+          transform="translateY(-50%)"
+          borderRadius="full"
+          variant="solid"
+          bg={isCompleted ? "whiteAlpha.950" : "whiteAlpha.300"}
+          color={isCompleted ? `${categoryStyle.palette}.700` : "white"}
+          borderWidth="1px"
+          borderColor="whiteAlpha.500"
+          _hover={{
+            bg: isCompleted ? "white" : "whiteAlpha.400",
+          }}
+          aria-label={isCompleted ? "Task completed" : "Mark task complete"}
+          zIndex={2}
+          onClick={() => {
+            const next = !isCompleted
+            toggle(task.taskId, next)
+            if (next) {
+              runCompleteShake()
+            }
+          }}
+        >
+          {isCompleted ? <Check size={16} /> : <Plus size={16} />}
+        </Button>
+
+        <Box
+          as="span"
+          draggable={draggable}
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          cursor={draggable ? "grab" : "default"}
+          _active={draggable ? { cursor: "grabbing" } : undefined}
+          userSelect="none"
+          title={draggable ? "Drag to reorder" : undefined}
+          color="whiteAlpha.800"
+          fontWeight="bold"
+          px={1}
+          position="absolute"
+          left="4"
+          bottom="3"
+          zIndex={2}
+        >
+          ::
+        </Box>
+
+        <Box
           position="relative"
           zIndex={1}
+          w="100%"
+          minH="218px"
+          pr={{ base: "84px", md: "92px" }}
+          pb={10}
+          display="flex"
+          flexDirection="column"
+          gap={3}
         >
-          <Grid templateColumns="auto 1fr auto" alignItems="center" gap={2}>
-            <HStack gap={2}>
-              <Checkbox.Root
-                checked={task.completed === true}
-                onCheckedChange={(details) =>
-                  toggle(task.taskId, details.checked === true)
-                }
-                aria-label={`Mark ${task.title} as complete`}
-              >
-                <Checkbox.HiddenInput />
-                <Checkbox.Control>
-                  <Checkbox.Indicator />
-                </Checkbox.Control>
-              </Checkbox.Root>
+          <Text
+            textAlign="left"
+            fontWeight="semibold"
+            fontSize={{ base: "lg", md: "xl" }}
+            textDecoration={isCompleted ? "line-through" : "none"}
+            lineClamp="1"
+          >
+            {task.title}
+          </Text>
 
-              <Box
-                as="span"
-                draggable={draggable}
-                onDragStart={onDragStart}
-                onDragEnd={onDragEnd}
-                cursor={draggable ? "grab" : "default"}
-                _active={draggable ? { cursor: "grabbing" } : undefined}
-                userSelect="none"
-                title={draggable ? "Drag to reorder" : undefined}
-                color="gray.500"
-                fontWeight="bold"
-                px={1}
-              >
-                ::
-              </Box>
-            </HStack>
+          <Text color="whiteAlpha.900" fontSize="sm">
+            {task.description || `${categoryStyle.label} related task`}
+          </Text>
 
-            <Text
-              textAlign="center"
-              fontWeight="semibold"
-              fontSize={{ base: "lg", md: "xl" }}
-              textDecoration={task.completed ? "line-through" : "none"}
-              lineClamp="1"
-            >
-              {task.title}
-            </Text>
-
-            <Dialog.Root>
-              <Dialog.Trigger asChild>
-                <Button
-                  size="xs"
-                  colorScheme="red"
-                  variant="outline"
-                  aria-label="Delete task"
-                >
-                  <Trash2 size={16} color="currentColor" />
-                </Button>
-              </Dialog.Trigger>
-              <Portal>
-                <Dialog.Backdrop />
-                <Dialog.Positioner>
-                  <Dialog.Content>
-                    <Dialog.Header>
-                      <Dialog.Title>Delete task?</Dialog.Title>
-                    </Dialog.Header>
-                    <Dialog.Body>
-                      <Dialog.Description>
-                        Are you sure you want to delete "{task.title}"?
-                      </Dialog.Description>
-                    </Dialog.Body>
-                    <Dialog.Footer>
-                      <Dialog.ActionTrigger asChild>
-                        <Button variant="outline">Cancel</Button>
-                      </Dialog.ActionTrigger>
-                      <Dialog.ActionTrigger asChild>
-                        <Button
-                          colorScheme="red"
-                          onClick={() => remove(task.taskId)}
-                        >
-                          Confirm delete
-                        </Button>
-                      </Dialog.ActionTrigger>
-                    </Dialog.Footer>
-                  </Dialog.Content>
-                </Dialog.Positioner>
-              </Portal>
-            </Dialog.Root>
-          </Grid>
-
-          <Box display="flex" justifyContent="center" alignItems="center">
-            <Text
-              fontSize={{ base: "3xl", md: "4xl" }}
-              fontWeight="bold"
-              color={
-                hasProgressBackground
-                  ? "white"
-                  : countdownText === "Past due"
-                    ? "red.500"
-                    : "green.500"
-              }
-              textAlign="center"
-            >
-              {countdownText || "No due date"}
-            </Text>
-          </Box>
-
-          <HStack gap={2} flexWrap="wrap" alignSelf="flex-end" justifySelf="flex-start">
-            <Badge colorPalette="blue" variant="subtle">
+          <HStack gap={2} flexWrap="wrap" minW={0}>
+            <Badge bg={metaTagBg} color="white" borderWidth="1px" borderColor="whiteAlpha.400">
+              {categoryStyle.label}
+            </Badge>
+            <Badge bg={metaTagBg} color="white" borderWidth="1px" borderColor="whiteAlpha.400">
               {(task.priority || "medium").toUpperCase()}
             </Badge>
             {dueDateLabel ? (
-              <Badge colorPalette="purple" variant="subtle">
+              <Badge
+                bg={metaTagBg}
+                color="white"
+                borderWidth="1px"
+                borderColor="whiteAlpha.400"
+              >
                 Due {dueDateLabel}
               </Badge>
             ) : null}
           </HStack>
-        </Grid>
+
+          <Box flex="1" />
+        </Box>
+
+        <Text
+          position="absolute"
+          left="50%"
+          bottom="3"
+          transform="translateX(-50%)"
+          fontSize="lg"
+          fontWeight="semibold"
+          fontVariantNumeric="tabular-nums"
+          minW="12ch"
+          color="white"
+          textAlign="center"
+          whiteSpace="nowrap"
+          pointerEvents="none"
+          zIndex={2}
+        >
+          {countdownText || "No due date"}
+        </Text>
       </Box>
     </MotionDiv>
   )

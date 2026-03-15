@@ -1,11 +1,17 @@
 import { useState } from "react"
-import { SimpleGrid } from "@chakra-ui/react"
+import { Box, SimpleGrid, Skeleton } from "@chakra-ui/react"
 import { LayoutGroup, motion } from "framer-motion"
 import TaskCard from "./TaskCard"
 
 const MotionDiv = motion.div
 
-export default function TaskList({ tasks = [], toggle, remove, reorder }) {
+export default function TaskList({
+  tasks = [],
+  isLoading = false,
+  toggle,
+  remove,
+  reorder,
+}) {
   const [draggedTaskId, setDraggedTaskId] = useState(null)
   const [dragOverTaskId, setDragOverTaskId] = useState(null)
   const canDrag = tasks.length > 1
@@ -17,7 +23,21 @@ export default function TaskList({ tasks = [], toggle, remove, reorder }) {
 
   return (
     <LayoutGroup>
-      <SimpleGrid minChildWidth={{ base: "100%", lg: "460px" }} gap={5}>
+      <SimpleGrid minChildWidth={{ base: "100%", md: "320px" }} gap={5}>
+        {isLoading
+          ? Array.from({ length: 6 }, (_, index) => (
+              <Box
+                key={`task-skeleton-${index}`}
+                borderWidth="1px"
+                borderRadius="30px"
+                minH="250px"
+                p={4}
+              >
+                <Skeleton h="100%" borderRadius="24px" />
+              </Box>
+            ))
+          : null}
+
         {tasks.map((task, index) => (
           <MotionDiv
             key={task.taskId}

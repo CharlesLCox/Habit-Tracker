@@ -3,9 +3,8 @@ import TaskForm from "../components/tasks/TaskForm"
 import TaskList from "../components/tasks/TaskList"
 import useTasks from "../hooks/useTasks"
 
-
 export default function Dashboard() {
-  const { tasks, addTask, toggleTask, removeTask, reorderTask } = useTasks()
+  const { tasks, isLoading, addTask, toggleTask, removeTask, reorderTask } = useTasks()
 
   return (
     <Box maxW="1200px" mx="auto" mt={10} px={{ base: 4, md: 6 }}>
@@ -13,6 +12,7 @@ export default function Dashboard() {
       <TaskForm onAdd={addTask} />
       <TaskList
         tasks={tasks}
+        isLoading={isLoading}
         toggle={toggleTask}
         remove={removeTask}
         reorder={reorderTask}

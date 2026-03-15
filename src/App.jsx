@@ -1,4 +1,5 @@
-import { Box, Flex, useMediaQuery } from "@chakra-ui/react"
+import { useEffect, useState } from "react"
+import { Box, Flex } from "@chakra-ui/react"
 import { AnimatePresence, motion } from "framer-motion"
 import {
   BrowserRouter,
@@ -13,19 +14,50 @@ import ProfileMenu from "./components/navigation/ProfileMenu"
 import Dashboard from "./pages/Dashboard"
 import Habits from "./pages/Habits"
 import Login from "./pages/Login"
+import Overview from "./pages/Overview"
 import Settings from "./pages/Settings"
 import Statistics from "./pages/Statistics"
 import { isAuthenticated } from "./services/auth"
 
 const MotionDiv = motion.div
 
+function getIsSideNavLayout() {
+  if (typeof window === "undefined") {
+    return false
+  }
+
+  const isLandscape = window.matchMedia("(orientation: landscape)").matches
+  const isMobile = window.matchMedia("(max-width: 768px)").matches
+
+  return isLandscape && !isMobile
+}
+
+function useStableSideNavLayout() {
+  const [isSideNav, setIsSideNav] = useState(getIsSideNavLayout)
+
+  useEffect(() => {
+    const updateLayout = () => {
+      setIsSideNav(getIsSideNavLayout())
+    }
+
+    updateLayout()
+    window.addEventListener("resize", updateLayout)
+    window.addEventListener("orientationchange", updateLayout)
+
+    return () => {
+      window.removeEventListener("resize", updateLayout)
+      window.removeEventListener("orientationchange", updateLayout)
+    }
+  }, [])
+
+  return isSideNav
+}
+
 function ProtectedLayout() {
   const location = useLocation()
   const outlet = useOutlet()
   const authenticated = isAuthenticated()
-  const [isLandscape] = useMediaQuery("(orientation: landscape)")
-  const [isMobile] = useMediaQuery("(max-width: 768px)")
-  const isSideNav = isLandscape && !isMobile
+  const isSideNav = useStableSideNavLayout()
 
   if (!authenticated) {
     return <Navigate to="/login" replace />
@@ -69,7 +101,8 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/confirm-registration" element={<Login />} />
         <Route element={<ProtectedLayout />}>
-          <Route path="/" element={<Navigate to="/tasks" replace />} />
+          <Route path="/" element={<Navigate to="/overview" replace />} />
+          <Route path="/overview" element={<Overview />} />
           <Route path="/tasks" element={<Dashboard />} />
           <Route path="/habits" element={<Habits />} />
           <Route path="/statistics" element={<Statistics />} />

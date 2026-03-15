@@ -7,11 +7,27 @@ export default function Navbar({ isSideNav = false }) {
   const location = useLocation()
 
   const navItems = [
+    { label: "Overview", path: "/overview" },
     { label: "Tasks", path: "/tasks" },
     { label: "Habits", path: "/habits" },
     { label: "Statistics", path: "/statistics" },
     { label: "Settings", path: "/settings" },
   ]
+
+  function getNavButtonStyles(isSelected) {
+    return {
+      color: "white",
+      bg: isSelected ? "whiteAlpha.300" : "transparent",
+      borderWidth: "1px",
+      borderColor: isSelected ? "whiteAlpha.500" : "transparent",
+      _hover: {
+        bg: isSelected ? "whiteAlpha.400" : "whiteAlpha.200",
+      },
+      _active: {
+        bg: isSelected ? "whiteAlpha.500" : "whiteAlpha.300",
+      },
+    }
+  }
 
   return (
     <Box
@@ -22,6 +38,7 @@ export default function Navbar({ isSideNav = false }) {
       py="4"
       w={isSideNav ? "260px" : "100%"}
       minH={isSideNav ? "100vh" : "auto"}
+      backgroundColor={"#00a08f"}
     >
       <Flex
         align={isSideNav ? "stretch" : "center"}
@@ -29,7 +46,9 @@ export default function Navbar({ isSideNav = false }) {
         direction={isSideNav ? "column" : "row"}
         h="100%"
       >
-        <Heading size="md">Task Tracker</Heading>
+        <Heading size="md" color="white">
+          Task Tracker
+        </Heading>
 
         {isSideNav ? (
           <Flex direction="column" gap="2" mt="6" flex="1">
@@ -45,7 +64,8 @@ export default function Navbar({ isSideNav = false }) {
                   key={item.path}
                   size="sm"
                   justifyContent="flex-start"
-                  variant={location.pathname === item.path ? "solid" : "ghost"}
+                  variant="ghost"
+                  {...getNavButtonStyles(location.pathname === item.path)}
                   onClick={() => {
                     if (location.pathname === item.path) {
                       return
@@ -74,7 +94,8 @@ export default function Navbar({ isSideNav = false }) {
                 <Button
                   key={item.path}
                   size="sm"
-                  variant={location.pathname === item.path ? "solid" : "ghost"}
+                  variant="ghost"
+                  {...getNavButtonStyles(location.pathname === item.path)}
                   onClick={() => {
                     if (location.pathname === item.path) {
                       return

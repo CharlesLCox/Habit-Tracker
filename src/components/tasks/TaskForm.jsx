@@ -23,6 +23,7 @@ export default function TaskForm({ onAdd }) {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [priority, setPriority] = useState("medium")
+  const [category, setCategory] = useState("Productivity")
   const [dueDate, setDueDate] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
 
@@ -39,6 +40,7 @@ export default function TaskForm({ onAdd }) {
       title: trimmedTitle,
       description: description.trim(),
       priority,
+      category,
       dueDate,
     }
 
@@ -47,6 +49,7 @@ export default function TaskForm({ onAdd }) {
     setTitle("")
     setDescription("")
     setPriority("medium")
+    setCategory("Productivity")
     setDueDate("")
   }
 
@@ -142,6 +145,23 @@ export default function TaskForm({ onAdd }) {
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
                         <option value="high">High</option>
+                      </NativeSelect.Field>
+                      <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                  </Field.Root>
+
+                  <Field.Root>
+                    <Field.Label>Category</Field.Label>
+                    <NativeSelect.Root>
+                      <NativeSelect.Field
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                      >
+                        <option value="Health">Health</option>
+                        <option value="Learning">Learning</option>
+                        <option value="Productivity">Productivity</option>
+                        <option value="Social">Social</option>
+                        <option value="Selfcare">Selfcare</option>
                       </NativeSelect.Field>
                       <NativeSelect.Indicator />
                     </NativeSelect.Root>

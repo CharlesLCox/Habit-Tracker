@@ -149,7 +149,7 @@ export default function Login() {
       }
 
       await login(username, password)
-      navigate("/tasks")
+      navigate("/overview")
     } catch (err) {
       console.error("Auth error:", err)
       setError(err?.name ? `${err.name}: ${err.message}` : "Authentication failed")

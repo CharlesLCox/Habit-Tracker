@@ -2,35 +2,7 @@ import { useState } from "react"
 import { Box, Heading, HStack, Text, VStack } from "@chakra-ui/react"
 import dayjs from "dayjs"
 import HabitList from "../components/habits/HabitList"
-
-const sampleHabits = [
-  {
-    id: "habit-1",
-    name: "Morning Walk",
-    description: "Walk for at least 20 minutes before work.",
-    activeDays: ["Monday", "Wednesday", "Friday", "Sunday"],
-  },
-  {
-    id: "habit-2",
-    name: "Read 30 Minutes",
-    description: "Read a book chapter or article without phone distractions.",
-    activeDays: ["Tuesday", "Thursday", "Saturday"],
-  },
-  {
-    id: "habit-3",
-    name: "Hydration Check",
-    description: "Track water intake and finish at least 2 liters.",
-    activeDays: [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ],
-  },
-]
+import { sampleHabits } from "../data/sampleHabits"
 
 export default function Habits() {
   const [selectedDate, setSelectedDate] = useState(dayjs().format("YYYY-MM-DD"))

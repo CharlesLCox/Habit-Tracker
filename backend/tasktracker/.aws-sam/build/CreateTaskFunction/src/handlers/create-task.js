@@ -31,6 +31,30 @@ exports.handler = async (event) => {
     const priorityOptions = new Set(["low", "medium", "high"])
     const normalizedPriority = String(body.priority || "medium").toLowerCase()
 
+    const categoryOptions = new Set([
+      "health",
+      "learning",
+      "productivity",
+      "social",
+      "selfcare",
+    ])
+    const categoryLabelByKey = {
+      health: "Health",
+      learning: "Learning",
+      productivity: "Productivity",
+      social: "Social",
+      selfcare: "Selfcare",
+    }
+    const normalizedCategory = String(body.category || "productivity")
+      .toLowerCase()
+      .replace(/\s+/g, "")
+    const resolvedCategory = categoryOptions.has(normalizedCategory)
+      ? categoryLabelByKey[normalizedCategory]
+      : "Productivity"
+    const trimmedDescription = body.description
+      ? String(body.description).trim()
+      : ""
+
     if (!body.title || !body.title.trim()) {
       return {
         statusCode: 400,
@@ -43,11 +67,12 @@ exports.handler = async (event) => {
       userId,
       taskId: crypto.randomUUID(),
       title: body.title.trim(),
-      description: body.description ? String(body.description).trim() : "",
+      description: trimmedDescription || `${resolvedCategory} related task`,
       priority: priorityOptions.has(normalizedPriority)
         ? normalizedPriority
         : "medium",
       dueDate: body.dueDate ? String(body.dueDate) : "",
+      category: resolvedCategory,
       completed: false,
       createdAt: new Date().toISOString(),
     }
