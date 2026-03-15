@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Badge, Box, Button, HStack, Text, VStack } from "@chakra-ui/react"
 import { motion, useAnimationControls } from "framer-motion"
-import { Check, Plus } from "lucide-react"
+import { BookOpen, Check, Cog, Hand, Heart, Plus, Users } from "lucide-react"
 
 const dayOrder = [
   "Sunday",
@@ -30,6 +30,28 @@ function getCategoryColorPalette(category) {
 
   const normalized = String(category).toLowerCase().replaceAll(" ", "")
   return categoryColorByName[normalized] || "gray"
+}
+
+function renderCategoryIcon(category, size = 16) {
+  const normalized = String(category || "").toLowerCase().replaceAll(" ", "")
+
+  if (normalized === "health") {
+    return <Heart size={size} />
+  }
+
+  if (normalized === "learning") {
+    return <BookOpen size={size} />
+  }
+
+  if (normalized === "selfcare") {
+    return <Hand size={size} />
+  }
+
+  if (normalized === "social") {
+    return <Users size={size} />
+  }
+
+  return <Cog size={size} />
 }
 
 export default function HabitCard({ habit }) {
@@ -80,9 +102,12 @@ export default function HabitCard({ habit }) {
               {habit.category || "Uncategorized"}
             </Badge>
 
-            <Text fontSize="lg" fontWeight="semibold">
-              {habit.name}
-            </Text>
+            <HStack align="center" gap={2}>
+              {renderCategoryIcon(habit.category)}
+              <Text fontSize="lg" fontWeight="semibold">
+                {habit.name}
+              </Text>
+            </HStack>
 
             <Text color="whiteAlpha.900" fontSize="sm">
               {habit.description}
@@ -134,3 +159,5 @@ export default function HabitCard({ habit }) {
     </MotionDiv>
   )
 }
+
+

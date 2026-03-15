@@ -12,7 +12,18 @@ import {
 } from "@chakra-ui/react"
 import dayjs from "dayjs"
 import { motion, useAnimationControls } from "framer-motion"
-import { Check, Menu as MenuIcon, Pencil, Plus, Trash2 } from "lucide-react"
+import {
+  BookOpen,
+  Check,
+  Cog,
+  Hand,
+  Heart,
+  Menu as MenuIcon,
+  Pencil,
+  Plus,
+  Trash2,
+  Users,
+} from "lucide-react"
 
 const MotionDiv = motion.div
 
@@ -57,6 +68,28 @@ function normalizeCategoryKey(category) {
 function getCategoryStyle(category) {
   const key = normalizeCategoryKey(category)
   return categoryStyleByName[key] || categoryStyleByName.productivity
+}
+
+function renderCategoryIcon(category, size = 16) {
+  const key = normalizeCategoryKey(category)
+
+  if (key === "health") {
+    return <Heart size={size} />
+  }
+
+  if (key === "learning") {
+    return <BookOpen size={size} />
+  }
+
+  if (key === "selfcare") {
+    return <Hand size={size} />
+  }
+
+  if (key === "social") {
+    return <Users size={size} />
+  }
+
+  return <Cog size={size} />
 }
 
 function getTimeLeftRatio(task, nowMs) {
@@ -446,15 +479,19 @@ export default function TaskCard({
           flexDirection="column"
           gap={3}
         >
-          <Text
-            textAlign="left"
-            fontWeight="semibold"
-            fontSize={{ base: "lg", md: "xl" }}
-            textDecoration={isCompleted ? "line-through" : "none"}
-            lineClamp="1"
-          >
-            {task.title}
-          </Text>
+          <HStack align="center" gap={2} minW={0}>
+            {renderCategoryIcon(task.category)}
+            <Text
+              textAlign="left"
+              fontWeight="semibold"
+              fontSize={{ base: "lg", md: "xl" }}
+              textDecoration={isCompleted ? "line-through" : "none"}
+              lineClamp="1"
+              minW={0}
+            >
+              {task.title}
+            </Text>
+          </HStack>
 
           <Text color="whiteAlpha.900" fontSize="sm">
             {task.description || `${categoryStyle.label} related task`}
@@ -503,3 +540,5 @@ export default function TaskCard({
     </MotionDiv>
   )
 }
+
+
