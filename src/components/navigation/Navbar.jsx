@@ -17,6 +17,7 @@ export default function Navbar({ isSideNav = false }) {
     <Box
       borderBottomWidth={isSideNav ? "0" : "1px"}
       borderRightWidth={isSideNav ? "1px" : "0"}
+      borderRadius={isSideNav ? "0 24px 24px 0" : undefined}
       px={isSideNav ? "4" : "6"}
       py="4"
       w={isSideNav ? "260px" : "100%"}

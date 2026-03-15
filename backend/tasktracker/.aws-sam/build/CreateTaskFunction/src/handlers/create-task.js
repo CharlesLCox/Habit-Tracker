@@ -28,6 +28,8 @@ exports.handler = async (event) => {
 
   try {
     const body = JSON.parse(event.body || "{}")
+    const priorityOptions = new Set(["low", "medium", "high"])
+    const normalizedPriority = String(body.priority || "medium").toLowerCase()
 
     if (!body.title || !body.title.trim()) {
       return {
@@ -41,6 +43,11 @@ exports.handler = async (event) => {
       userId,
       taskId: crypto.randomUUID(),
       title: body.title.trim(),
+      description: body.description ? String(body.description).trim() : "",
+      priority: priorityOptions.has(normalizedPriority)
+        ? normalizedPriority
+        : "medium",
+      dueDate: body.dueDate ? String(body.dueDate) : "",
       completed: false,
       createdAt: new Date().toISOString(),
     }

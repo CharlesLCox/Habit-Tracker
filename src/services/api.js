@@ -19,8 +19,10 @@ export async function getTasks() {
   return res.json()
 }
 
-export async function createTask(title) {
+export async function createTask(taskInput) {
   const auth = getAuth()
+  const payload =
+    typeof taskInput === "string" ? { title: taskInput } : { ...taskInput }
 
   const res = await fetch(`${API_URL}/tasks`, {
     method: "POST",
@@ -28,7 +30,7 @@ export async function createTask(title) {
       Authorization: `Bearer ${auth?.idToken ?? ""}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ title }),
+    body: JSON.stringify(payload),
   })
 
   if (!res.ok) {

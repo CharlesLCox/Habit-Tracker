@@ -1,10 +1,103 @@
-import { Box, Heading, Text } from "@chakra-ui/react"
+import { useState } from "react"
+import { Box, Heading, HStack, Text, VStack } from "@chakra-ui/react"
+import dayjs from "dayjs"
+import HabitList from "../components/habits/HabitList"
+
+const sampleHabits = [
+  {
+    id: "habit-1",
+    name: "Morning Walk",
+    description: "Walk for at least 20 minutes before work.",
+    activeDays: ["Monday", "Wednesday", "Friday", "Sunday"],
+  },
+  {
+    id: "habit-2",
+    name: "Read 30 Minutes",
+    description: "Read a book chapter or article without phone distractions.",
+    activeDays: ["Tuesday", "Thursday", "Saturday"],
+  },
+  {
+    id: "habit-3",
+    name: "Hydration Check",
+    description: "Track water intake and finish at least 2 liters.",
+    activeDays: [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ],
+  },
+]
 
 export default function Habits() {
+  const [selectedDate, setSelectedDate] = useState(dayjs().format("YYYY-MM-DD"))
+
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const offset = index - 3
+    const date = dayjs().add(offset, "day")
+
+    return {
+      key: date.format("YYYY-MM-DD"),
+      weekday: date.format("ddd"),
+      dayNumber: date.format("D"),
+      month: date.format("MMM"),
+      isToday: offset === 0,
+    }
+  })
+
   return (
-    <Box maxW="600px" mx="auto" mt={10}>
-      <Heading mb={3}>Habits</Heading>
-      <Text color="gray.500">This page is ready for future habit features.</Text>
+    <Box maxW="1200px" mx="auto" mt={10} px={{ base: 4, md: 6 }}>
+      <VStack align="stretch" gap={6}>
+        <Heading>Habits</Heading>
+
+        <Box overflowX="auto" py={1}>
+          <HStack w="fit-content" minW="100%" justify="center" gap={3}>
+            {days.map((day) => {
+              const isSelected = day.key === selectedDate
+
+              return (
+                <VStack
+                  key={day.key}
+                  as="button"
+                  type="button"
+                  minW={{ base: "78px", md: "96px" }}
+                  px={3}
+                  py={3}
+                  borderWidth="1px"
+                  borderRadius="lg"
+                  borderColor={
+                    isSelected ? "blue.500" : day.isToday ? "green.500" : "border"
+                  }
+                  bg={isSelected ? "blue.500" : "bg"}
+                  color={isSelected ? "white" : "inherit"}
+                  gap={0}
+                  cursor="pointer"
+                  aria-pressed={isSelected}
+                  onClick={() => setSelectedDate(day.key)}
+                >
+                  <Text fontSize="sm" fontWeight="medium">
+                    {day.weekday}
+                  </Text>
+                  <Text fontSize="xl" fontWeight="bold" lineHeight="1.2">
+                    {day.dayNumber}
+                  </Text>
+                  <Text fontSize="xs">{day.month}</Text>
+                </VStack>
+              )
+            })}
+          </HStack>
+        </Box>
+
+        <VStack align="stretch" gap={3}>
+          <Text color="fg.muted" fontSize="sm">
+            Habit cards
+          </Text>
+          <HabitList habits={sampleHabits} />
+        </VStack>
+      </VStack>
     </Box>
   )
 }

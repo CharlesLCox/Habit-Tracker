@@ -17,10 +17,10 @@ export default function useTasks() {
     loadTasks()
   }, [])
 
-  const addTask = async (title) => {
+  const addTask = async (taskInput) => {
     try {
-      const newTask = await createTask(title)
-      setTasks((prev) => [...prev, newTask])
+      const newTask = await createTask(taskInput)
+      setTasks((prev) => [newTask, ...prev])
     } catch (error) {
       console.error("Failed to create task:", error)
     }
