@@ -9,6 +9,7 @@ import {
   useOutlet,
 } from "react-router-dom"
 import Navbar from "./components/navigation/Navbar"
+import ProfileMenu from "./components/navigation/ProfileMenu"
 import Dashboard from "./pages/Dashboard"
 import Habits from "./pages/Habits"
 import Login from "./pages/Login"
@@ -33,6 +34,11 @@ function ProtectedLayout() {
   return (
     <Flex minH="100vh" direction={isSideNav ? "row" : "column"}>
       <Navbar isSideNav={isSideNav} />
+      {isSideNav ? (
+        <Box position="fixed" top="3" right="4" zIndex="dropdown">
+          <ProfileMenu />
+        </Box>
+      ) : null}
       <Box flex="1" overflow="hidden">
         <AnimatePresence mode="wait" initial={false}>
           <MotionDiv

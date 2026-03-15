@@ -8,7 +8,7 @@ export default function Dashboard() {
   const { tasks, addTask, toggleTask, removeTask, reorderTask } = useTasks()
 
   return (
-    <Box maxW="600px" mx="auto" mt={10}>
+    <Box maxW="1200px" mx="auto" mt={10} px={{ base: 4, md: 6 }}>
       <Heading mb={6}>My Tasks</Heading>
       <TaskForm onAdd={addTask} />
       <TaskList

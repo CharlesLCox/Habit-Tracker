@@ -1,6 +1,6 @@
 import { Box, Button, Flex, Heading } from "@chakra-ui/react"
 import { useLocation, useNavigate } from "react-router-dom"
-import { logout } from "../../services/auth"
+import ProfileMenu from "./ProfileMenu"
 
 export default function Navbar({ isSideNav = false }) {
   const navigate = useNavigate()
@@ -12,11 +12,6 @@ export default function Navbar({ isSideNav = false }) {
     { label: "Statistics", path: "/statistics" },
     { label: "Settings", path: "/settings" },
   ]
-
-  function handleLogout() {
-    logout()
-    navigate("/login")
-  }
 
   return (
     <Box
@@ -64,19 +59,9 @@ export default function Navbar({ isSideNav = false }) {
                 </Button>
               )
             })}
-
-            <Button
-              size="sm"
-              variant="outline"
-              mt="auto"
-              justifyContent="flex-start"
-              onClick={handleLogout}
-            >
-              Sign out
-            </Button>
           </Flex>
         ) : (
-          <Flex gap="2" wrap="wrap" justify="flex-end">
+          <Flex gap="2" wrap="wrap" justify="flex-end" align="center">
             {navItems.map((item, targetIndex) => {
               const currentIndex = navItems.findIndex(
                 (navItem) => navItem.path === location.pathname
@@ -104,9 +89,7 @@ export default function Navbar({ isSideNav = false }) {
               )
             })}
 
-            <Button size="sm" variant="outline" onClick={handleLogout}>
-              Sign out
-            </Button>
+            <ProfileMenu />
           </Flex>
         )}
       </Flex>

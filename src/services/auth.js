@@ -87,3 +87,36 @@ export function isAuthenticated() {
   const auth = getAuth()
   return !!auth?.accessToken
 }
+
+function parseJwtPayload(token) {
+  if (!token) {
+    return null
+  }
+
+  try {
+    const encodedPayload = token.split(".")[1]
+    if (!encodedPayload) {
+      return null
+    }
+
+    const base64 = encodedPayload.replace(/-/g, "+").replace(/_/g, "/")
+    const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4)
+    const decoded = atob(padded)
+    return JSON.parse(decoded)
+  } catch {
+    return null
+  }
+}
+
+export function getProfileName() {
+  const auth = getAuth()
+  const claims = parseJwtPayload(auth?.idToken)
+
+  return (
+    claims?.preferred_username ||
+    claims?.name ||
+    claims?.["cognito:username"] ||
+    claims?.email ||
+    "Profile"
+  )
+}

@@ -1,25 +1,50 @@
 import { useState } from "react"
-import { Input, Button, HStack } from "@chakra-ui/react"
+import { Alert, Button, HStack, Input, VStack } from "@chakra-ui/react"
 
 export default function TaskForm({ onAdd }) {
   const [task, setTask] = useState("")
+  const [errorMessage, setErrorMessage] = useState("")
 
   const handleSubmit = () => {
-    if (!task) return
-    onAdd(task)
+    const trimmedTask = task.trim()
+
+    if (!trimmedTask) {
+      setErrorMessage("You did not write a task yet.")
+      return
+    }
+
+    setErrorMessage("")
+    onAdd(trimmedTask)
     setTask("")
   }
 
   return (
-    <HStack mb={4}>
-      <Input
-        placeholder="New task"
-        value={task}
-        onChange={(e) => setTask(e.target.value)}
-      />
-      <Button colorScheme="blue" onClick={handleSubmit}>
-        Add
-      </Button>
-    </HStack>
+    <VStack align="stretch" mb={4} gap={2}>
+      <HStack>
+        <Input
+          placeholder="New task"
+          value={task}
+          onChange={(e) => {
+            const nextValue = e.target.value
+            setTask(nextValue)
+            if (nextValue.trim()) {
+              setErrorMessage("")
+            }
+          }}
+        />
+        <Button colorScheme="blue" onClick={handleSubmit}>
+          Add
+        </Button>
+      </HStack>
+
+      {errorMessage ? (
+        <Alert.Root status="error" variant="surface">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Description>{errorMessage}</Alert.Description>
+          </Alert.Content>
+        </Alert.Root>
+      ) : null}
+    </VStack>
   )
 }
