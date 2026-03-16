@@ -13,6 +13,19 @@ import {
 } from "@chakra-ui/react"
 import { useState } from "react"
 
+const surfaceCardProps = {
+  borderWidth: "1px",
+  borderRadius: "2xl",
+  p: { base: 4, md: 5 },
+  bg: "white",
+  boxShadow: "0 8px 24px rgba(15, 23, 42, 0.06)",
+  transition: "transform 0.24s ease, box-shadow 0.24s ease",
+  _hover: {
+    transform: "translateY(-2px)",
+    boxShadow: "0 14px 32px rgba(15, 23, 42, 0.1)",
+  },
+}
+
 export default function Settings() {
   const [settings, setSettings] = useState({
     displayName: "Task Tracker User",
@@ -54,7 +67,7 @@ export default function Settings() {
           </Text>
         </Box>
 
-        <Box borderWidth="1px" borderRadius="2xl" p={{ base: 4, md: 5 }}>
+        <Box {...surfaceCardProps}>
           <VStack align="stretch" gap={4}>
             <HStack justify="space-between" align="center">
               <Heading size="md">Profile</Heading>
@@ -94,7 +107,7 @@ export default function Settings() {
           </VStack>
         </Box>
 
-        <Box borderWidth="1px" borderRadius="2xl" p={{ base: 4, md: 5 }}>
+        <Box {...surfaceCardProps}>
           <VStack align="stretch" gap={4}>
             <Heading size="md">Appearance</Heading>
 
@@ -146,7 +159,7 @@ export default function Settings() {
           </VStack>
         </Box>
 
-        <Box borderWidth="1px" borderRadius="2xl" p={{ base: 4, md: 5 }}>
+        <Box {...surfaceCardProps}>
           <VStack align="stretch" gap={4}>
             <Heading size="md">Notifications</Heading>
 
@@ -191,7 +204,7 @@ export default function Settings() {
           </VStack>
         </Box>
 
-        <Box borderWidth="1px" borderRadius="2xl" p={{ base: 4, md: 5 }}>
+        <Box {...surfaceCardProps}>
           <VStack align="stretch" gap={4}>
             <Heading size="md">Task Defaults</Heading>
 
@@ -244,7 +257,7 @@ export default function Settings() {
           </VStack>
         </Box>
 
-        <Box borderWidth="1px" borderRadius="2xl" p={{ base: 4, md: 5 }}>
+        <Box {...surfaceCardProps}>
           <VStack align="stretch" gap={4}>
             <Heading size="md">Data & Privacy</Heading>
             <Text color="fg.muted" fontSize="sm">
@@ -270,7 +283,12 @@ export default function Settings() {
             <Button variant="outline" onClick={() => setSaveMessage("")}>
               Reset Notice
             </Button>
-            <Button bg="#00a08f" color="white" _hover={{ bg: "#008c7d" }} onClick={handleSave}>
+            <Button
+              bg="#00a08f"
+              color="white"
+              _hover={{ bg: "#008c7d", transform: "translateY(-1px)" }}
+              onClick={handleSave}
+            >
               Save Settings
             </Button>
           </HStack>

@@ -71,7 +71,7 @@ function ProtectedLayout() {
           <ProfileMenu />
         </Box>
       ) : null}
-      <Box flex="1" overflow="hidden">
+      <Box flex="1" overflowY="auto" pb={{ base: 6, md: 8 }}>
         <AnimatePresence mode="wait" initial={false}>
           <MotionDiv
             key={location.pathname}

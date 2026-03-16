@@ -85,9 +85,13 @@ const TaskForm = forwardRef(function TaskForm({ onAdd }, ref) {
                 w={{ base: "88px", md: "108px" }}
                 h={{ base: "88px", md: "108px" }}
                 borderRadius="full"
-                color="blue.600"
-                bg="blue.50"
-                _hover={{ bg: "blue.100" }}
+                color="#007d70"
+                bg="rgba(0, 160, 143, 0.12)"
+                boxShadow="0 8px 20px rgba(0, 125, 112, 0.16)"
+                _hover={{
+                  bg: "rgba(0, 160, 143, 0.2)",
+                  transform: "translateY(-2px) scale(1.02)",
+                }}
                 onClick={() => setIsExpanded(true)}
               >
                 <Plus size={44} color="currentColor" />
@@ -103,7 +107,13 @@ const TaskForm = forwardRef(function TaskForm({ onAdd }, ref) {
             transition={{ duration: 0.28, ease: "easeInOut" }}
             style={{ overflow: "hidden" }}
           >
-            <Box borderWidth="1px" borderRadius="xl" p={{ base: 4, md: 5 }}>
+            <Box
+              borderWidth="1px"
+              borderRadius="xl"
+              p={{ base: 4, md: 5 }}
+              bg="white"
+              boxShadow="0 10px 24px rgba(15, 23, 42, 0.08)"
+            >
               <VStack as="form" onSubmit={handleSubmit} align="stretch" gap={4}>
                 <HStack justify="space-between" align="center">
                   <Heading size="md">Create Task</Heading>

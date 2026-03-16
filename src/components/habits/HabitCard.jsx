@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Badge, Box, Button, HStack, Text, VStack } from "@chakra-ui/react"
 import dayjs from "dayjs"
 import { motion, useAnimationControls } from "framer-motion"
-import { BookOpen, Check, Cog, Hand, Heart, Plus, Users } from "lucide-react"
+import { BookOpen, Check, Cog, Flame, Hand, Heart, Plus, Users } from "lucide-react"
 
 const dayOrder = [
   "Sunday",
@@ -89,6 +89,50 @@ function resolveDateKey(selectedDate) {
   return dayjs().format("YYYY-MM-DD")
 }
 
+function getHabitStreak(activeDays, completedDates) {
+  const scheduledDays = Array.isArray(activeDays)
+    ? activeDays.filter((day) => dayOrder.includes(day))
+    : []
+
+  if (scheduledDays.length === 0) {
+    return 0
+  }
+
+  const completedDateSet = new Set(
+    (Array.isArray(completedDates) ? completedDates : [])
+      .map((dateValue) => resolveDateKey(dateValue))
+      .filter(Boolean)
+  )
+
+  let cursor = dayjs().startOf("day")
+
+  let lookback = 0
+  while (!scheduledDays.includes(cursor.format("dddd")) && lookback < 7) {
+    cursor = cursor.subtract(1, "day")
+    lookback += 1
+  }
+
+  let streak = 0
+  let iterations = 0
+  while (iterations < 3660) {
+    const weekday = cursor.format("dddd")
+
+    if (scheduledDays.includes(weekday)) {
+      const dateKey = cursor.format("YYYY-MM-DD")
+      if (completedDateSet.has(dateKey)) {
+        streak += 1
+      } else {
+        break
+      }
+    }
+
+    cursor = cursor.subtract(1, "day")
+    iterations += 1
+  }
+
+  return streak
+}
+
 export default function HabitCard({ habit, selectedDate, onComplete }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [successBurstTick, setSuccessBurstTick] = useState(0)
@@ -103,8 +147,10 @@ export default function HabitCard({ habit, selectedDate, onComplete }) {
   const completedDates = Array.isArray(habit.completedDates)
     ? habit.completedDates
     : []
+  const isFutureSelectedDate = dayjs(dateKey).isAfter(dayjs(), "day")
   const isCompletedForDate = completedDates.includes(dateKey)
   const isActiveOnSelectedDay = sortedActiveDays.includes(selectedWeekday)
+  const streakCount = getHabitStreak(sortedActiveDays, completedDates)
   const isMarked = isCompletedForDate
   const cardBackground = isMarked ? `${categoryColor}.600` : `${categoryColor}.800`
   const cardBorder = isMarked ? `${categoryColor}.800` : `${categoryColor}`
@@ -125,7 +171,12 @@ export default function HabitCard({ habit, selectedDate, onComplete }) {
   }
 
   async function handleComplete() {
-    if (isCompletedForDate || !isActiveOnSelectedDay || isSubmitting) {
+    if (
+      isCompletedForDate ||
+      !isActiveOnSelectedDay ||
+      isFutureSelectedDate ||
+      isSubmitting
+    ) {
       return
     }
 
@@ -221,6 +272,23 @@ export default function HabitCard({ habit, selectedDate, onComplete }) {
           transform: "translateY(-3px)",
         }}
       >
+        <Box position="absolute" top="3" right="3" zIndex={2}>
+          <HStack
+            gap="5px"
+            px="13px"
+            py="5px"
+            borderRadius="full"
+            bg="whiteAlpha.250"
+            borderWidth="1px"
+            borderColor="whiteAlpha.500"
+          >
+            <Flame size={18} color={isMarked ? "#fff7ed" : "#fed7aa"} />
+            <Text fontSize="15px" fontWeight="bold" lineHeight="1">
+              {streakCount}
+            </Text>
+          </HStack>
+        </Box>
+
         <HStack align="center" justify="space-between" w="100%" h="100%" gap={4}>
           <VStack align="stretch" gap={3} flex="1" minW={0} h="100%">
             <Badge
@@ -272,10 +340,17 @@ export default function HabitCard({ habit, selectedDate, onComplete }) {
             _hover={{
               bg: isMarked ? "white" : "whiteAlpha.400",
             }}
-            disabled={isCompletedForDate || !isActiveOnSelectedDay || isSubmitting}
+            disabled={
+              isCompletedForDate ||
+              !isActiveOnSelectedDay ||
+              isFutureSelectedDate ||
+              isSubmitting
+            }
             aria-label={
               isCompletedForDate
                 ? "Habit completed for selected day"
+                : isFutureSelectedDate
+                  ? "Cannot complete habits on future dates"
                 : !isActiveOnSelectedDay
                   ? `Habit not active on ${selectedWeekday}`
                   : "Mark habit complete"

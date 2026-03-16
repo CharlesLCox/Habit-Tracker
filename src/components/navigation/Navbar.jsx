@@ -16,29 +16,37 @@ export default function Navbar({ isSideNav = false }) {
 
   function getNavButtonStyles(isSelected) {
     return {
-      color: "white",
-      bg: isSelected ? "whiteAlpha.300" : "transparent",
+      color: isSelected ? "#006f63" : "white",
+      bg: isSelected ? "white" : "transparent",
       borderWidth: "1px",
-      borderColor: isSelected ? "whiteAlpha.500" : "transparent",
+      borderColor: isSelected ? "whiteAlpha.900" : "whiteAlpha.300",
+      borderRadius: "full",
+      fontWeight: "semibold",
       _hover: {
-        bg: isSelected ? "whiteAlpha.400" : "whiteAlpha.200",
+        bg: isSelected ? "whiteAlpha.900" : "whiteAlpha.200",
       },
       _active: {
-        bg: isSelected ? "whiteAlpha.500" : "whiteAlpha.300",
+        bg: isSelected ? "whiteAlpha.800" : "whiteAlpha.300",
       },
     }
   }
 
   return (
     <Box
+      position={isSideNav ? "sticky" : "sticky"}
+      top="0"
+      zIndex="banner"
       borderBottomWidth={isSideNav ? "0" : "1px"}
       borderRightWidth={isSideNav ? "1px" : "0"}
-      borderRadius={isSideNav ? "0 24px 24px 0" : undefined}
+      borderColor="whiteAlpha.400"
+      borderRadius={isSideNav ? "0 24px 24px 0" : "0 0 20px 20px"}
       px={isSideNav ? "4" : "6"}
       py="4"
       w={isSideNav ? "260px" : "100%"}
       minH={isSideNav ? "100vh" : "auto"}
-      backgroundColor={"#00a08f"}
+      background="linear-gradient(160deg, #00a08f 0%, #008f80 100%)"
+      boxShadow="0 10px 28px rgba(0, 66, 60, 0.16)"
+      backdropFilter="blur(6px)"
     >
       <Flex
         align={isSideNav ? "stretch" : "center"}
@@ -46,7 +54,7 @@ export default function Navbar({ isSideNav = false }) {
         direction={isSideNav ? "column" : "row"}
         h="100%"
       >
-        <Heading size="md" color="white">
+        <Heading size="md" color="white" letterSpacing="tight">
           Task Tracker
         </Heading>
 
