@@ -15,6 +15,20 @@ import {
   login,
   resendConfirmationCode,
 } from "../services/auth"
+import LoginModeActions from "../components/pages/login/LoginModeActions"
+import LoginStatusMessages from "../components/pages/login/LoginStatusMessages"
+import {
+  formatAuthError,
+  getAuthModeTitle,
+  getAuthSubmitLabel,
+  getConfirmValidationError,
+  getLinkConfirmationPayload,
+  getResendSuccessMessage,
+  getSigninValidationError,
+  getSignupSuccessMessage,
+  getSignupValidationError,
+  shouldOpenConfirmModeFromPath,
+} from "../utils/loginUtils"
 
 export default function Login() {
   const navigate = useNavigate()
@@ -41,19 +55,18 @@ export default function Login() {
   }
 
   useEffect(() => {
-    if (location.pathname === "/confirm-registration") {
+    if (shouldOpenConfirmModeFromPath(location.pathname)) {
       setMode("confirm")
     }
   }, [location.pathname])
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search)
-    const linkedUsername = params.get("user_name") || params.get("username")
-    const linkedCode = params.get("confirmation_code") || params.get("code")
+    const confirmationPayload = getLinkConfirmationPayload(location.search)
 
-    if (!linkedUsername || !linkedCode) {
+    if (!confirmationPayload) {
       return
     }
+    const { username: linkedUsername, code: linkedCode } = confirmationPayload
 
     let isCancelled = false
 
@@ -81,11 +94,7 @@ export default function Login() {
         }
 
         console.error("Link confirmation error:", err)
-        setError(
-          err?.name
-            ? `${err.name}: ${err.message}`
-            : "Unable to confirm account from link"
-        )
+        setError(formatAuthError(err, "Unable to confirm account from link"))
       } finally {
         if (!isCancelled) {
           setLinkConfirmLoading(false)
@@ -108,24 +117,18 @@ export default function Login() {
 
     try {
       if (mode === "signup") {
-        if (!username.trim() || !email.trim() || !password.trim()) {
-          throw new Error("Username, email, and password are required")
-        }
-
-        if (password !== confirmPassword) {
-          throw new Error("Passwords do not match")
+        const signupValidationError = getSignupValidationError({
+          username,
+          email,
+          password,
+          confirmPassword,
+        })
+        if (signupValidationError) {
+          throw new Error(signupValidationError)
         }
 
         const response = await createAccount({ username, password, email })
-        const destination = response?.CodeDeliveryDetails?.Destination
-
-        setSuccessMessage(
-          response?.UserConfirmed
-            ? "Account created. You can sign in now."
-            : destination
-              ? `Account created. Check your email for a confirmation code sent to ${destination}.`
-              : "Account created. Please confirm your account before signing in."
-        )
+        setSuccessMessage(getSignupSuccessMessage(response))
         setMode(response?.UserConfirmed ? "signin" : "confirm")
         setPassword("")
         setConfirmPassword("")
@@ -133,8 +136,12 @@ export default function Login() {
       }
 
       if (mode === "confirm") {
-        if (!username.trim() || !confirmationCode.trim()) {
-          throw new Error("Username and confirmation code are required")
+        const confirmValidationError = getConfirmValidationError({
+          username,
+          confirmationCode,
+        })
+        if (confirmValidationError) {
+          throw new Error(confirmValidationError)
         }
 
         await confirmAccount({ username, code: confirmationCode })
@@ -144,15 +151,16 @@ export default function Login() {
         return
       }
 
-      if (!username.trim() || !password.trim()) {
-        throw new Error("Username and password are required")
+      const signinValidationError = getSigninValidationError({ username, password })
+      if (signinValidationError) {
+        throw new Error(signinValidationError)
       }
 
       await login(username, password)
       navigate("/overview")
     } catch (err) {
       console.error("Auth error:", err)
-      setError(err?.name ? `${err.name}: ${err.message}` : "Authentication failed")
+      setError(formatAuthError(err, "Authentication failed"))
     } finally {
       setLoading(false)
     }
@@ -169,15 +177,10 @@ export default function Login() {
       }
 
       const response = await resendConfirmationCode(username)
-      const destination = response?.CodeDeliveryDetails?.Destination
-      setSuccessMessage(
-        destination
-          ? `A new confirmation email was sent to ${destination}.`
-          : "A new confirmation email was sent."
-      )
+      setSuccessMessage(getResendSuccessMessage(response))
     } catch (err) {
       console.error("Resend code error:", err)
-      setError(err?.name ? `${err.name}: ${err.message}` : "Unable to resend code")
+      setError(formatAuthError(err, "Unable to resend code"))
     } finally {
       setResendLoading(false)
     }
@@ -186,11 +189,7 @@ export default function Login() {
   return (
     <Box maxW="420px" mx="auto" mt="80px" p="6" borderWidth="1px" rounded="lg">
       <Heading size="lg" mb="6">
-        {mode === "signin"
-          ? "Sign in"
-          : mode === "signup"
-            ? "Create account"
-            : "Confirm account"}
+        {getAuthModeTitle(mode)}
       </Heading>
 
       <form onSubmit={handleSubmit}>
@@ -251,87 +250,22 @@ export default function Login() {
             </Field.Root>
           ) : null}
 
-          {successMessage ? <Text color="green.600">{successMessage}</Text> : null}
-          {error ? <Text color="red.500">{error}</Text> : null}
-          {linkConfirmLoading ? (
-            <Text color="blue.600">Confirming your account from the email link...</Text>
-          ) : null}
+          <LoginStatusMessages
+            successMessage={successMessage}
+            error={error}
+            linkConfirmLoading={linkConfirmLoading}
+          />
 
           <Button type="submit" loading={loading}>
-            {mode === "signin"
-              ? "Sign in"
-              : mode === "signup"
-                ? "Create account"
-                : "Confirm account"}
+            {getAuthSubmitLabel(mode)}
           </Button>
 
-          {mode === "confirm" ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleResendCode}
-              loading={resendLoading}
-            >
-              Resend confirmation email
-            </Button>
-          ) : null}
-
-          {mode === "signin" ? (
-            <>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => switchMode("signup")}
-              >
-                Don&apos;t have an account? Create account
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => switchMode("confirm")}
-              >
-                Have a confirmation code? Confirm account
-              </Button>
-            </>
-          ) : null}
-
-          {mode === "signup" ? (
-            <>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => switchMode("signin")}
-              >
-                Already have an account? Sign in
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => switchMode("confirm")}
-              >
-                Already have a code? Confirm account
-              </Button>
-            </>
-          ) : null}
-
-          {mode === "confirm" ? (
-            <>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => switchMode("signin")}
-              >
-                Back to sign in
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => switchMode("signup")}
-              >
-                Need an account? Create account
-              </Button>
-            </>
-          ) : null}
+          <LoginModeActions
+            mode={mode}
+            switchMode={switchMode}
+            handleResendCode={handleResendCode}
+            resendLoading={resendLoading}
+          />
         </Stack>
       </form>
     </Box>

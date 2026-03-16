@@ -1,7 +1,6 @@
 import {
   Box,
   EmptyState,
-  Heading,
   HStack,
   ProgressCircle,
   SimpleGrid,
@@ -9,216 +8,40 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react"
-import dayjs from "dayjs"
 import { BarChart3, CheckCircle2, Flame, ListChecks } from "lucide-react"
 import { useMemo } from "react"
+import PageHeader from "../components/ui/PageHeader"
+import PageShell from "../components/ui/PageShell"
+import SurfacePanel from "../components/ui/SurfacePanel"
 import useHabits from "../hooks/useHabits"
 import useTasks from "../hooks/useTasks"
-
-const surfaceCardProps = {
-  borderWidth: "1px",
-  borderRadius: "2xl",
-  bg: "white",
-  p: { base: 6, md: 8 },
-  boxShadow: "0 8px 24px rgba(15, 23, 42, 0.06)",
-  transition: "transform 0.24s ease, box-shadow 0.24s ease",
-  _hover: {
-    transform: "translateY(-2px)",
-    boxShadow: "0 14px 32px rgba(15, 23, 42, 0.1)",
-  },
-}
-
-function toDateKey(value) {
-  const parsed = dayjs(value)
-  if (!parsed.isValid()) {
-    return null
-  }
-
-  return parsed.format("YYYY-MM-DD")
-}
-
-function buildCountMap(dateKeys) {
-  return dateKeys.reduce((map, dateKey) => {
-    if (!dateKey) {
-      return map
-    }
-
-    map.set(dateKey, (map.get(dateKey) || 0) + 1)
-    return map
-  }, new Map())
-}
-
-function calculateCurrentStreak(dateSet, startDateKey) {
-  let streak = 0
-  let cursor = dayjs(startDateKey)
-
-  while (dateSet.has(cursor.format("YYYY-MM-DD"))) {
-    streak += 1
-    cursor = cursor.subtract(1, "day")
-  }
-
-  return streak
-}
+import { buildStatisticsAnalytics } from "../utils/statisticsUtils"
 
 export default function Statistics() {
   const { tasks, isLoading: isTasksLoading } = useTasks()
   const { habits, isLoading: isHabitsLoading } = useHabits()
   const isLoading = isTasksLoading || isHabitsLoading
 
-  const analytics = useMemo(() => {
-    const today = dayjs().startOf("day")
-    const todayKey = today.format("YYYY-MM-DD")
-    const todayWeekday = today.format("dddd")
-
-    const completedTasks = tasks.filter((task) => task.completed === true)
-    const taskCompletionDateKeys = completedTasks
-      .map((task) => toDateKey(task.completedAt))
-      .filter(Boolean)
-    const habitCompletionDateKeys = habits
-      .flatMap((habit) => (Array.isArray(habit.completedDates) ? habit.completedDates : []))
-      .map((dateKey) => toDateKey(dateKey))
-      .filter(Boolean)
-
-    const completedTaskCount = completedTasks.length
-    const totalTaskCount = tasks.length
-    const taskCompletionRate =
-      totalTaskCount === 0 ? 0 : Math.round((completedTaskCount / totalTaskCount) * 100)
-
-    const completedHabitsToday = habits.filter((habit) => {
-      return Array.isArray(habit.completedDates) && habit.completedDates.includes(todayKey)
-    }).length
-    const activeHabitsToday = habits.filter((habit) => {
-      return Array.isArray(habit.activeDays) && habit.activeDays.includes(todayWeekday)
-    }).length
-    const habitTodayRate =
-      activeHabitsToday === 0
-        ? 0
-        : Math.round((completedHabitsToday / activeHabitsToday) * 100)
-
-    const taskCompletedWithDueDate = completedTasks.filter((task) => {
-      return toDateKey(task.dueDate) && toDateKey(task.completedAt)
-    })
-    const onTimeCompletedTaskCount = taskCompletedWithDueDate.filter((task) => {
-      return dayjs(task.completedAt).valueOf() <= dayjs(task.dueDate).valueOf()
-    }).length
-    const onTimeRate =
-      taskCompletedWithDueDate.length === 0
-        ? 0
-        : Math.round((onTimeCompletedTaskCount / taskCompletedWithDueDate.length) * 100)
-
-    const taskStreak = calculateCurrentStreak(new Set(taskCompletionDateKeys), todayKey)
-    const productiveDateSet = new Set([...taskCompletionDateKeys, ...habitCompletionDateKeys])
-    const productiveStreak = calculateCurrentStreak(productiveDateSet, todayKey)
-
-    const taskCountByDate = buildCountMap(taskCompletionDateKeys)
-    const habitCountByDate = buildCountMap(habitCompletionDateKeys)
-    const dailySeries = Array.from({ length: 14 }, (_, index) => {
-      const date = today.subtract(13 - index, "day")
-      const key = date.format("YYYY-MM-DD")
-
-      return {
-        key,
-        label: date.format("ddd"),
-        taskCount: taskCountByDate.get(key) || 0,
-        habitCount: habitCountByDate.get(key) || 0,
-      }
-    })
-    const maxDailyCount = Math.max(
-      1,
-      ...dailySeries.map((entry) => Math.max(entry.taskCount, entry.habitCount))
-    )
-
-    const weeklyCountMap = new Map()
-    ;[...taskCompletionDateKeys, ...habitCompletionDateKeys].forEach((dateKey) => {
-      const weekKey = dayjs(dateKey).startOf("week").format("YYYY-MM-DD")
-      weeklyCountMap.set(weekKey, (weeklyCountMap.get(weekKey) || 0) + 1)
-    })
-
-    const weeklySeries = Array.from({ length: 8 }, (_, index) => {
-      const weekStart = today.startOf("week").subtract(7 - index, "week")
-      const weekKey = weekStart.format("YYYY-MM-DD")
-
-      return {
-        key: weekKey,
-        label: weekStart.format("MMM D"),
-        count: weeklyCountMap.get(weekKey) || 0,
-      }
-    })
-    const maxWeeklyCount = Math.max(1, ...weeklySeries.map((entry) => entry.count))
-
-    const categoryOrder = ["Health", "Learning", "Productivity", "Social", "Selfcare"]
-    const categoryCountMap = new Map(categoryOrder.map((category) => [category, 0]))
-    completedTasks.forEach((task) => {
-      const category = task.category || "Productivity"
-      categoryCountMap.set(category, (categoryCountMap.get(category) || 0) + 1)
-    })
-    habits.forEach((habit) => {
-      const category = habit.category || "Selfcare"
-      const completedCount = Array.isArray(habit.completedDates)
-        ? habit.completedDates.length
-        : 0
-      categoryCountMap.set(category, (categoryCountMap.get(category) || 0) + completedCount)
-    })
-
-    const categorySeries = Array.from(categoryCountMap.entries())
-      .map(([category, count]) => ({ category, count }))
-      .sort((a, b) => b.count - a.count)
-    const maxCategoryCount = Math.max(1, ...categorySeries.map((entry) => entry.count))
-
-    const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-    const weekdayCounts = Array.from({ length: 7 }, () => 0)
-    habitCompletionDateKeys.forEach((dateKey) => {
-      const weekdayIndex = dayjs(dateKey).day()
-      weekdayCounts[weekdayIndex] += 1
-    })
-    const weekdaySeries = weekdayLabels.map((label, index) => ({
-      label,
-      count: weekdayCounts[index],
-    }))
-    const maxWeekdayCount = Math.max(1, ...weekdaySeries.map((entry) => entry.count))
-
-    return {
-      completedTaskCount,
-      totalTaskCount,
-      taskCompletionRate,
-      completedHabitsToday,
-      activeHabitsToday,
-      habitTodayRate,
-      onTimeRate,
-      taskStreak,
-      productiveStreak,
-      dailySeries,
-      maxDailyCount,
-      weeklySeries,
-      maxWeeklyCount,
-      categorySeries,
-      maxCategoryCount,
-      weekdaySeries,
-      maxWeekdayCount,
-      hasAnyData: totalTaskCount > 0 || habits.length > 0,
-    }
-  }, [habits, tasks])
+  const analytics = useMemo(() => buildStatisticsAnalytics(tasks, habits), [tasks, habits])
 
   return (
-    <Box maxW="1200px" mx="auto" mt={10} px={{ base: 4, md: 6 }}>
+    <PageShell>
       <VStack align="stretch" gap={6}>
-        <VStack align="stretch" gap={1}>
-          <Heading>Statistics</Heading>
-          <Text color="fg.muted">
-            Track your trends and progress over time. Detailed analytics will appear here.
-          </Text>
-        </VStack>
+        <PageHeader
+          title="Statistics"
+          subtitle="Track your trends and progress over time. Detailed analytics will appear here."
+        />
 
         {isLoading ? (
           <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
             {Array.from({ length: 6 }, (_, index) => (
-              <Box key={`stats-skeleton-${index}`} {...surfaceCardProps}>
+              <SurfacePanel key={`stats-skeleton-${index}`} p={{ base: 6, md: 8 }}>
                 <Skeleton h="200px" borderRadius="xl" />
-              </Box>
+              </SurfacePanel>
             ))}
           </SimpleGrid>
         ) : !analytics.hasAnyData ? (
-          <Box {...surfaceCardProps}>
+          <SurfacePanel p={{ base: 6, md: 8 }}>
             <EmptyState.Root size="lg">
               <EmptyState.Content>
                 <EmptyState.Indicator>
@@ -232,11 +55,11 @@ export default function Statistics() {
                 </VStack>
               </EmptyState.Content>
             </EmptyState.Root>
-          </Box>
+          </SurfacePanel>
         ) : (
           <>
             <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} gap={4}>
-              <Box {...surfaceCardProps} p={4}>
+              <SurfacePanel p={4}>
                 <VStack align="stretch" gap={2}>
                   <HStack color="fg.muted" fontSize="sm">
                     <ListChecks size={16} />
@@ -249,9 +72,9 @@ export default function Statistics() {
                     {analytics.taskCompletionRate}% completion rate
                   </Text>
                 </VStack>
-              </Box>
+              </SurfacePanel>
 
-              <Box {...surfaceCardProps} p={4}>
+              <SurfacePanel p={4}>
                 <VStack align="stretch" gap={2}>
                   <HStack color="fg.muted" fontSize="sm">
                     <CheckCircle2 size={16} />
@@ -264,9 +87,9 @@ export default function Statistics() {
                     {analytics.habitTodayRate}% complete today
                   </Text>
                 </VStack>
-              </Box>
+              </SurfacePanel>
 
-              <Box {...surfaceCardProps} p={4}>
+              <SurfacePanel p={4}>
                 <VStack align="stretch" gap={2}>
                   <HStack color="fg.muted" fontSize="sm">
                     <Flame size={16} />
@@ -280,9 +103,9 @@ export default function Statistics() {
                     {analytics.productiveStreak === 1 ? "" : "s"}
                   </Text>
                 </VStack>
-              </Box>
+              </SurfacePanel>
 
-              <Box {...surfaceCardProps} p={4}>
+              <SurfacePanel p={4}>
                 <VStack align="stretch" gap={2}>
                   <Text color="fg.muted" fontSize="sm">
                     On-Time Completion
@@ -315,13 +138,15 @@ export default function Statistics() {
                     </Text>
                   </HStack>
                 </VStack>
-              </Box>
+              </SurfacePanel>
             </SimpleGrid>
 
             <SimpleGrid columns={{ base: 1, xl: 2 }} gap={4}>
-              <Box {...surfaceCardProps}>
+              <SurfacePanel p={{ base: 6, md: 8 }}>
                 <VStack align="stretch" gap={4}>
-                  <Heading size="sm">Completions in Last 14 Days</Heading>
+                  <Text fontSize="lg" fontWeight="semibold">
+                    Completions in Last 14 Days
+                  </Text>
                   <HStack align="end" justify="space-between" h="210px" gap={2}>
                     {analytics.dailySeries.map((entry) => {
                       const taskHeight = Math.max(
@@ -371,11 +196,13 @@ export default function Statistics() {
                     </HStack>
                   </HStack>
                 </VStack>
-              </Box>
+              </SurfacePanel>
 
-              <Box {...surfaceCardProps}>
+              <SurfacePanel p={{ base: 6, md: 8 }}>
                 <VStack align="stretch" gap={4}>
-                  <Heading size="sm">Weekly Completion Trend (8 Weeks)</Heading>
+                  <Text fontSize="lg" fontWeight="semibold">
+                    Weekly Completion Trend (8 Weeks)
+                  </Text>
                   <VStack align="stretch" gap={3}>
                     {analytics.weeklySeries.map((entry) => {
                       const widthPercent = (entry.count / analytics.maxWeeklyCount) * 100
@@ -398,13 +225,15 @@ export default function Statistics() {
                     })}
                   </VStack>
                 </VStack>
-              </Box>
+              </SurfacePanel>
             </SimpleGrid>
 
             <SimpleGrid columns={{ base: 1, xl: 2 }} gap={4}>
-              <Box {...surfaceCardProps}>
+              <SurfacePanel p={{ base: 6, md: 8 }}>
                 <VStack align="stretch" gap={4}>
-                  <Heading size="sm">Completion by Category</Heading>
+                  <Text fontSize="lg" fontWeight="semibold">
+                    Completion by Category
+                  </Text>
                   <VStack align="stretch" gap={3}>
                     {analytics.categorySeries.map((entry) => {
                       const widthPercent = (entry.count / analytics.maxCategoryCount) * 100
@@ -428,11 +257,13 @@ export default function Statistics() {
                     })}
                   </VStack>
                 </VStack>
-              </Box>
+              </SurfacePanel>
 
-              <Box {...surfaceCardProps}>
+              <SurfacePanel p={{ base: 6, md: 8 }}>
                 <VStack align="stretch" gap={4}>
-                  <Heading size="sm">Habit Completions by Weekday</Heading>
+                  <Text fontSize="lg" fontWeight="semibold">
+                    Habit Completions by Weekday
+                  </Text>
                   <SimpleGrid columns={7} gap={2}>
                     {analytics.weekdaySeries.map((entry) => {
                       const intensity = entry.count / analytics.maxWeekdayCount
@@ -462,11 +293,11 @@ export default function Statistics() {
                     })}
                   </SimpleGrid>
                 </VStack>
-              </Box>
+              </SurfacePanel>
             </SimpleGrid>
           </>
         )}
       </VStack>
-    </Box>
+    </PageShell>
   )
 }

@@ -1,9 +1,6 @@
 import {
-  Badge,
-  Box,
   Button,
   Field,
-  Heading,
   HStack,
   Input,
   NativeSelect,
@@ -12,19 +9,10 @@ import {
   VStack,
 } from "@chakra-ui/react"
 import { useState } from "react"
-
-const surfaceCardProps = {
-  borderWidth: "1px",
-  borderRadius: "2xl",
-  p: { base: 4, md: 5 },
-  bg: "white",
-  boxShadow: "0 8px 24px rgba(15, 23, 42, 0.06)",
-  transition: "transform 0.24s ease, box-shadow 0.24s ease",
-  _hover: {
-    transform: "translateY(-2px)",
-    boxShadow: "0 14px 32px rgba(15, 23, 42, 0.1)",
-  },
-}
+import SettingsSection from "../components/pages/settings/SettingsSection"
+import PageHeader from "../components/ui/PageHeader"
+import PageShell from "../components/ui/PageShell"
+import PrimaryButton from "../components/ui/PrimaryButton"
 
 export default function Settings() {
   const [settings, setSettings] = useState({
@@ -57,25 +45,14 @@ export default function Settings() {
   }
 
   return (
-    <Box maxW="1200px" mx="auto" mt={10} px={{ base: 4, md: 6 }}>
+    <PageShell>
       <VStack align="stretch" gap={6}>
-        <Box>
-          <Heading mb={2}>Settings</Heading>
-          <Text color="fg.muted">
-            Configure your app preferences. These controls are placeholders for future backend
-            settings support.
-          </Text>
-        </Box>
+        <PageHeader
+          title="Settings"
+          subtitle="Configure your app preferences. These controls are placeholders for future backend settings support."
+        />
 
-        <Box {...surfaceCardProps}>
-          <VStack align="stretch" gap={4}>
-            <HStack justify="space-between" align="center">
-              <Heading size="md">Profile</Heading>
-              <Badge colorPalette="blue" variant="subtle">
-                Account
-              </Badge>
-            </HStack>
-
+        <SettingsSection title="Profile" badge="Account">
             <Field.Root>
               <Field.Label>Display Name</Field.Label>
               <Input
@@ -104,13 +81,9 @@ export default function Settings() {
                 <NativeSelect.Indicator />
               </NativeSelect.Root>
             </Field.Root>
-          </VStack>
-        </Box>
+        </SettingsSection>
 
-        <Box {...surfaceCardProps}>
-          <VStack align="stretch" gap={4}>
-            <Heading size="md">Appearance</Heading>
-
+        <SettingsSection title="Appearance">
             <Field.Root>
               <Field.Label>Language</Field.Label>
               <NativeSelect.Root>
@@ -156,13 +129,9 @@ export default function Settings() {
                 <NativeSelect.Indicator />
               </NativeSelect.Root>
             </Field.Root>
-          </VStack>
-        </Box>
+        </SettingsSection>
 
-        <Box {...surfaceCardProps}>
-          <VStack align="stretch" gap={4}>
-            <Heading size="md">Notifications</Heading>
-
+        <SettingsSection title="Notifications">
             <Field.Root>
               <Field.Label>Daily Reminder Time</Field.Label>
               <Input
@@ -201,13 +170,9 @@ export default function Settings() {
                 <NativeSelect.Indicator />
               </NativeSelect.Root>
             </Field.Root>
-          </VStack>
-        </Box>
+        </SettingsSection>
 
-        <Box {...surfaceCardProps}>
-          <VStack align="stretch" gap={4}>
-            <Heading size="md">Task Defaults</Heading>
-
+        <SettingsSection title="Task Defaults">
             <Field.Root>
               <Field.Label>Default Priority</Field.Label>
               <NativeSelect.Root>
@@ -254,12 +219,9 @@ export default function Settings() {
                 <NativeSelect.Indicator />
               </NativeSelect.Root>
             </Field.Root>
-          </VStack>
-        </Box>
+        </SettingsSection>
 
-        <Box {...surfaceCardProps}>
-          <VStack align="stretch" gap={4}>
-            <Heading size="md">Data & Privacy</Heading>
+        <SettingsSection title="Data & Privacy">
             <Text color="fg.muted" fontSize="sm">
               Placeholder actions for export and account cleanup.
             </Text>
@@ -270,8 +232,7 @@ export default function Settings() {
                 Delete Account
               </Button>
             </HStack>
-          </VStack>
-        </Box>
+        </SettingsSection>
 
         <Separator borderColor="border.emphasized" />
 
@@ -283,17 +244,10 @@ export default function Settings() {
             <Button variant="outline" onClick={() => setSaveMessage("")}>
               Reset Notice
             </Button>
-            <Button
-              bg="#00a08f"
-              color="white"
-              _hover={{ bg: "#008c7d", transform: "translateY(-1px)" }}
-              onClick={handleSave}
-            >
-              Save Settings
-            </Button>
+            <PrimaryButton onClick={handleSave}>Save Settings</PrimaryButton>
           </HStack>
         </HStack>
       </VStack>
-    </Box>
+    </PageShell>
   )
 }

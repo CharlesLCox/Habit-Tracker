@@ -1,0 +1,9 @@
+.primary-button {
+  background: #00a08f;
+  color: white;
+}
+
+.primary-button:hover {
+  background: #008c7d;
+  transform: translateY(-1px);
+}
