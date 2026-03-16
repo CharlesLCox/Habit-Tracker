@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Box, Heading, HStack, Text, VStack } from "@chakra-ui/react"
+import { Box, Heading, HStack, ProgressCircle, Text, VStack } from "@chakra-ui/react"
 import dayjs from "dayjs"
 import HabitForm from "../components/habits/HabitForm"
 import HabitList from "../components/habits/HabitList"
@@ -12,6 +12,13 @@ export default function Habits() {
   const filteredHabits = habits.filter((habit) => {
     return Array.isArray(habit.activeDays) && habit.activeDays.includes(selectedWeekday)
   })
+  const completedHabitsCount = filteredHabits.filter((habit) => {
+    return Array.isArray(habit.completedDates) && habit.completedDates.includes(selectedDate)
+  }).length
+  const totalHabitsCount = filteredHabits.length
+  const completionPercent =
+    totalHabitsCount === 0 ? 0 : Math.round((completedHabitsCount / totalHabitsCount) * 100)
+  const isFullyCompleted = totalHabitsCount > 0 && completionPercent === 100
 
   const days = Array.from({ length: 7 }, (_, index) => {
     const offset = index - 3
@@ -31,6 +38,48 @@ export default function Habits() {
       <VStack align="stretch" gap={6}>
         <Heading>Habits</Heading>
 
+        <Box borderWidth="1px" borderRadius="2xl" p={{ base: 5, md: 6 }}>
+          <VStack align="center" gap={3}>
+            <Text color="fg.muted" fontSize="sm">
+              Completion for {dayjs(selectedDate).format("MMM D, YYYY")}
+            </Text>
+
+            <ProgressCircle.Root value={completionPercent} colorPalette="green">
+              <ProgressCircle.Circle
+                css={{
+                  "--size": "220px",
+                  "--thickness": "16px",
+                }}
+              >
+                <ProgressCircle.Track />
+                <ProgressCircle.Range />
+              </ProgressCircle.Circle>
+              <Box
+                position="absolute"
+                inset={0}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                pointerEvents="none"
+              >
+                <Text fontSize={{ base: "4xl", md: "5xl" }} fontWeight="bold" lineHeight="1">
+                  {completionPercent}%
+                </Text>
+              </Box>
+            </ProgressCircle.Root>
+
+            <Text fontSize="sm" color="fg.muted">
+              {completedHabitsCount}/{totalHabitsCount} habits complete
+            </Text>
+
+            {isFullyCompleted ? (
+              <Text color="green.600" fontWeight="semibold">
+                All habits are done, good job!
+              </Text>
+            ) : null}
+          </VStack>
+        </Box>
+
         <Box overflowX="auto" py={1}>
           <HStack w="fit-content" minW="100%" justify="center" gap={3}>
             {days.map((day) => {
@@ -41,11 +90,11 @@ export default function Habits() {
                   key={day.key}
                   as="button"
                   type="button"
-                  minW={{ base: "78px", md: "96px" }}
-                  px={3}
-                  py={3}
+                  boxSize={{ base: "86px", md: "102px" }}
+                  flexShrink={0}
+                  justify="center"
                   borderWidth="1px"
-                  borderRadius="lg"
+                  borderRadius="full"
                   borderColor={
                     isSelected ? "blue.500" : day.isToday ? "green.500" : "border"
                   }

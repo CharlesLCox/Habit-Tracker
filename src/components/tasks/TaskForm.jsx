@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { forwardRef, useImperativeHandle, useRef, useState } from "react"
 import {
   Alert,
   Box,
@@ -18,7 +18,7 @@ import { Plus, X } from "lucide-react"
 
 const MotionDiv = motion.div
 
-export default function TaskForm({ onAdd }) {
+const TaskForm = forwardRef(function TaskForm({ onAdd }, ref) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
@@ -26,6 +26,21 @@ export default function TaskForm({ onAdd }) {
   const [category, setCategory] = useState("Productivity")
   const [dueDate, setDueDate] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
+  const titleInputRef = useRef(null)
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      openForm() {
+        setIsExpanded(true)
+        setErrorMessage("")
+        requestAnimationFrame(() => {
+          titleInputRef.current?.focus()
+        })
+      },
+    }),
+    []
+  )
 
   const handleSubmit = (event) => {
     event.preventDefault()
@@ -64,7 +79,7 @@ export default function TaskForm({ onAdd }) {
             exit={{ opacity: 0, scale: 0.94 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
-            <Box display="flex" justifyContent="flex-start">
+            <Box display="flex" justifyContent="center">
               <Button
                 variant="ghost"
                 w={{ base: "88px", md: "108px" }}
@@ -123,6 +138,7 @@ export default function TaskForm({ onAdd }) {
                       <Field.RequiredIndicator />
                     </Field.Label>
                     <Input
+                      ref={titleInputRef}
                       placeholder="What needs to get done?"
                       value={title}
                       onChange={(e) => {
@@ -207,4 +223,6 @@ export default function TaskForm({ onAdd }) {
       </AnimatePresence>
     </Box>
   )
-}
+})
+
+export default TaskForm

@@ -58,7 +58,9 @@ export default function Overview() {
                 </Text>
                 <Button
                   alignSelf="flex-start"
-                  colorScheme="teal"
+                  bg="#00a08f"
+                  color="white"
+                  _hover={{ bg: "#008c7d" }}
                   onClick={() => navigate("/tasks")}
                 >
                   Create task for today
