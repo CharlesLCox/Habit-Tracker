@@ -14,7 +14,7 @@ export default function TaskList({
 }) {
   const [draggedTaskId, setDraggedTaskId] = useState(null)
   const [dragOverTaskId, setDragOverTaskId] = useState(null)
-  const canDrag = tasks.length > 1
+  const canDrag = tasks.length > 1 && typeof reorder === "function"
 
   function resetDragState() {
     setDraggedTaskId(null)

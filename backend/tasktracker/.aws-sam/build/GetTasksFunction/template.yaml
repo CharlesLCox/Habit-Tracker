@@ -21,7 +21,7 @@ Resources:
     Properties:
       StageName: Prod
       Cors:
-        AllowMethods: "'GET,POST,DELETE,OPTIONS'"
+        AllowMethods: "'GET,POST,PATCH,DELETE,OPTIONS'"
         AllowHeaders: "'Content-Type,Authorization'"
         AllowOrigin: "'http://localhost:5173'"
       Auth:
@@ -44,6 +44,22 @@ Resources:
         - AttributeName: userId
           KeyType: HASH
         - AttributeName: taskId
+          KeyType: RANGE
+
+  HabitsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Habits
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: habitId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: habitId
           KeyType: RANGE
 
   GetTasksFunction:
@@ -109,6 +125,90 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
+  CompleteTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/complete-task.handler
+      Description: Mark a task as completed for the authenticated user
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TasksTable
+      Environment:
+        Variables:
+          TASKS_TABLE: !Ref TasksTable
+      Events:
+        CompleteTask:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TaskApi
+            Path: /tasks/{taskId}/complete
+            Method: PATCH
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  GetHabitsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/get-habits.handler
+      Description: Get all habits for the authenticated user
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref HabitsTable
+      Environment:
+        Variables:
+          HABITS_TABLE: !Ref HabitsTable
+      Events:
+        GetHabits:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TaskApi
+            Path: /habits
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  CreateHabitFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/create-habit.handler
+      Description: Create a habit for the authenticated user
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref HabitsTable
+      Environment:
+        Variables:
+          HABITS_TABLE: !Ref HabitsTable
+      Events:
+        CreateHabit:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TaskApi
+            Path: /habits
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  CompleteHabitFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/complete-habit.handler
+      Description: Mark a habit as completed for a specific date
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref HabitsTable
+      Environment:
+        Variables:
+          HABITS_TABLE: !Ref HabitsTable
+      Events:
+        CompleteHabit:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TaskApi
+            Path: /habits/{habitId}/complete
+            Method: PATCH
+            Auth:
+              Authorizer: CognitoAuthorizer
+
   TaskApiDefault4xx:
     Type: AWS::ApiGateway::GatewayResponse
     Properties:
@@ -117,7 +217,7 @@ Resources:
       ResponseParameters:
         gatewayresponse.header.Access-Control-Allow-Origin: "'http://localhost:5173'"
         gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
-        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,DELETE,OPTIONS'"
+        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,PATCH,DELETE,OPTIONS'"
 
   TaskApiDefault5xx:
     Type: AWS::ApiGateway::GatewayResponse
@@ -127,7 +227,7 @@ Resources:
       ResponseParameters:
         gatewayresponse.header.Access-Control-Allow-Origin: "'http://localhost:5173'"
         gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
-        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,DELETE,OPTIONS'"
+        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,PATCH,DELETE,OPTIONS'"
 
   TaskApiUnauthorized:
     Type: AWS::ApiGateway::GatewayResponse
@@ -137,7 +237,7 @@ Resources:
       ResponseParameters:
         gatewayresponse.header.Access-Control-Allow-Origin: "'http://localhost:5173'"
         gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
-        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,DELETE,OPTIONS'"
+        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,PATCH,DELETE,OPTIONS'"
 
   TaskApiAccessDenied:
     Type: AWS::ApiGateway::GatewayResponse
@@ -147,7 +247,7 @@ Resources:
       ResponseParameters:
         gatewayresponse.header.Access-Control-Allow-Origin: "'http://localhost:5173'"
         gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
-        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,DELETE,OPTIONS'"
+        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,POST,PATCH,DELETE,OPTIONS'"
 
 Outputs:
   WebEndpoint:

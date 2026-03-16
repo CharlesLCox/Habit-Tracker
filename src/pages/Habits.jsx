@@ -1,11 +1,17 @@
 import { useState } from "react"
 import { Box, Heading, HStack, Text, VStack } from "@chakra-ui/react"
 import dayjs from "dayjs"
+import HabitForm from "../components/habits/HabitForm"
 import HabitList from "../components/habits/HabitList"
-import { sampleHabits } from "../data/sampleHabits"
+import useHabits from "../hooks/useHabits"
 
 export default function Habits() {
   const [selectedDate, setSelectedDate] = useState(dayjs().format("YYYY-MM-DD"))
+  const { habits, isLoading, addHabit, completeHabitForDate } = useHabits()
+  const selectedWeekday = dayjs(selectedDate).format("dddd")
+  const filteredHabits = habits.filter((habit) => {
+    return Array.isArray(habit.activeDays) && habit.activeDays.includes(selectedWeekday)
+  })
 
   const days = Array.from({ length: 7 }, (_, index) => {
     const offset = index - 3
@@ -67,7 +73,13 @@ export default function Habits() {
           <Text color="fg.muted" fontSize="sm">
             Habit cards
           </Text>
-          <HabitList habits={sampleHabits} />
+          <HabitForm onAdd={addHabit} />
+          <HabitList
+            habits={filteredHabits}
+            isLoading={isLoading}
+            selectedDate={selectedDate}
+            onComplete={completeHabitForDate}
+          />
         </VStack>
       </VStack>
     </Box>

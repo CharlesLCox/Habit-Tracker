@@ -26,6 +26,31 @@ import {
 } from "lucide-react"
 
 const MotionDiv = motion.div
+const SUCCESS_BURST_PARTICLES = Array.from({ length: 32 }, (_, index) => {
+  const angle = index * 18
+  const radians = (angle * Math.PI) / 180
+  const outwardX = Math.cos(radians)
+  const outwardY = Math.sin(radians)
+  const edgeDistance = 62 + (index % 3) * 3
+
+  return {
+    angle,
+    outwardX,
+    outwardY,
+    startX: 50 + outwardX * edgeDistance,
+    startY: 50 + outwardY * edgeDistance,
+  }
+})
+const SUCCESS_BURST_COLORS = [
+  "#22c55e",
+  "#06b6d4",
+  "#3b82f6",
+  "#a855f7",
+  "#f59e0b",
+  "#ef4444",
+  "#10b981",
+  "#f97316",
+]
 
 const categoryStyleByName = {
   health: { label: "Health", palette: "green", rgb: [34, 197, 94] },
@@ -70,7 +95,7 @@ function getCategoryStyle(category) {
   return categoryStyleByName[key] || categoryStyleByName.productivity
 }
 
-function renderCategoryIcon(category, size = 16) {
+function renderCategoryIcon(category, size = 20) {
   const key = normalizeCategoryKey(category)
 
   if (key === "health") {
@@ -218,6 +243,7 @@ export default function TaskCard({
 }) {
   const [nowMs, setNowMs] = useState(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [successBurstTick, setSuccessBurstTick] = useState(0)
 
   const isCompleted = task.completed === true
   const categoryStyle = getCategoryStyle(task.category)
@@ -226,30 +252,27 @@ export default function TaskCard({
   const progressBarColor = progressBarRgb ? toRgbString(progressBarRgb) : null
   const progressFillWidth =
     timeLeftRatio == null ? "0%" : `${Math.round(clamp(timeLeftRatio, 0, 1) * 10000) / 100}%`
-  const hasProgressOverlay = !!progressBarColor && !isDragOver
+  const hasProgressOverlay = !!progressBarColor && !isDragOver && !isCompleted
 
-  const shakeConfig = useMemo(() => getShakeConfig(timeLeftRatio), [timeLeftRatio])
+  const shakeConfig = useMemo(
+    () => (isCompleted ? null : getShakeConfig(timeLeftRatio)),
+    [isCompleted, timeLeftRatio]
+  )
   const shakeControls = useAnimationControls()
   const countdownText = formatTimeLeft(task.dueDate, nowMs)
+  const timeStatusText = isCompleted ? "Done!" : countdownText || "No due date"
   const dueDateLabel = formatDueDateLabel(task.dueDate)
 
   const cardBackgroundColor = isCompleted
     ? `${categoryStyle.palette}.600`
-    : `${categoryStyle.palette}.300`
+    : `${categoryStyle.palette}.800`
   const cardBorderColor = isCompleted
     ? `${categoryStyle.palette}.800`
-    : `${categoryStyle.palette}.600`
+    : `${categoryStyle.palette}`
   const metaTagBg = isCompleted ? "whiteAlpha.300" : "whiteAlpha.200"
 
-  function runCompleteShake() {
-    shakeControls.start({
-      x: [0, -8, 8, -6, 6, 0],
-      rotate: [0, -1.2, 1.2, -0.9, 0.9, 0],
-      transition: {
-        duration: 0.38,
-        ease: "easeInOut",
-      },
-    })
+  function runSuccessBurst() {
+    setSuccessBurstTick((previousTick) => previousTick + 1)
   }
 
   useEffect(() => {
@@ -305,7 +328,62 @@ export default function TaskCard({
   }, [shakeConfig, shakeControls])
 
   return (
-    <MotionDiv animate={shakeControls} style={{ width: "100%" }}>
+    <MotionDiv animate={shakeControls} style={{ width: "100%", position: "relative" }}>
+      {successBurstTick > 0 ? (
+        <Box
+          position="absolute"
+          inset="-45px"
+          pointerEvents="none"
+          zIndex={4}
+          overflow="visible"
+        >
+          {SUCCESS_BURST_PARTICLES.map((particle, index) => {
+            const lineHeight = 16 + (index % 4) * 7
+            const lineWidth = index % 2 === 0 ? 3 : 4
+            const travel = 46 + (index % 5) * 14
+            const lineColor = SUCCESS_BURST_COLORS[index % SUCCESS_BURST_COLORS.length]
+
+            return (
+              <MotionDiv
+                key={`${successBurstTick}-${particle.angle}`}
+                style={{
+                  position: "absolute",
+                  left: `${particle.startX}%`,
+                  top: `${particle.startY}%`,
+                  width: `${lineWidth}px`,
+                  height: `${lineHeight}px`,
+                  marginLeft: `${-lineWidth / 2}px`,
+                  marginTop: `${-lineHeight / 2}px`,
+                  borderRadius: "999px",
+                  background: lineColor,
+                  transformOrigin: "50% 50%",
+                  boxShadow: `0 0 8px ${lineColor}`,
+                }}
+                initial={{
+                  opacity: 0,
+                  scaleY: 0.15,
+                  x: 0,
+                  y: 0,
+                  rotate: particle.angle + 90,
+                }}
+                animate={{
+                  opacity: [0, 1, 0],
+                  scaleY: [0.15, 1, 0.2],
+                  x: [0, particle.outwardX * travel, particle.outwardX * (travel + 18)],
+                  y: [0, particle.outwardY * travel, particle.outwardY * (travel + 18)],
+                  rotate: particle.angle + 90,
+                }}
+                transition={{
+                  duration: 0.62,
+                  delay: index * 0.01,
+                  ease: "easeOut",
+                }}
+              />
+            )
+          })}
+        </Box>
+      ) : null}
+
       <Box
         p={4}
         borderWidth="1px"
@@ -437,12 +515,14 @@ export default function TaskCard({
           }}
           aria-label={isCompleted ? "Task completed" : "Mark task complete"}
           zIndex={2}
+          disabled={isCompleted}
           onClick={() => {
-            const next = !isCompleted
-            toggle(task.taskId, next)
-            if (next) {
-              runCompleteShake()
+            if (isCompleted) {
+              return
             }
+
+            runSuccessBurst()
+            toggle(task.taskId, true)
           }}
         >
           {isCompleted ? <Check size={16} /> : <Plus size={16} />}
@@ -484,7 +564,7 @@ export default function TaskCard({
             <Text
               textAlign="left"
               fontWeight="semibold"
-              fontSize={{ base: "lg", md: "xl" }}
+              fontSize={{ base: "xl", md: "2xl" }}
               textDecoration={isCompleted ? "line-through" : "none"}
               lineClamp="1"
               minW={0}
@@ -534,11 +614,9 @@ export default function TaskCard({
           pointerEvents="none"
           zIndex={2}
         >
-          {countdownText || "No due date"}
+          {timeStatusText}
         </Text>
       </Box>
     </MotionDiv>
   )
 }
-
-

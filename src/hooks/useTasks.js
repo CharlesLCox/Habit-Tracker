@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { createTask, deleteTask, getTasks } from "../services/api"
+import { completeTask, createTask, deleteTask, getTasks } from "../services/api"
 
 export default function useTasks() {
   const [tasks, setTasks] = useState([])
@@ -38,12 +38,31 @@ export default function useTasks() {
     }
   }
 
-  const toggleTask = (taskId, checked) => {
+  const toggleTask = async (taskId, checked) => {
+    if (checked !== true) {
+      return
+    }
+
     setTasks((prev) =>
       prev.map((task) =>
-        task.taskId === taskId ? { ...task, completed: checked } : task
+        task.taskId === taskId ? { ...task, completed: true } : task
       )
     )
+
+    try {
+      const updatedTask = await completeTask(taskId)
+
+      setTasks((prev) =>
+        prev.map((task) => (task.taskId === taskId ? updatedTask : task))
+      )
+    } catch (error) {
+      console.error("Failed to complete task:", error)
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.taskId === taskId ? { ...task, completed: false } : task
+        )
+      )
+    }
   }
 
   const reorderTask = (draggedTaskId, targetTaskId) => {

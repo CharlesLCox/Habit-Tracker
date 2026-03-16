@@ -57,3 +57,78 @@ export async function deleteTask(taskId) {
 
   return res.json()
 }
+
+export async function completeTask(taskId) {
+  const auth = getAuth()
+
+  const res = await fetch(`${API_URL}/tasks/${taskId}/complete`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${auth?.idToken ?? ""}`,
+      "Content-Type": "application/json",
+    },
+  })
+
+  if (!res.ok) {
+    throw new Error(`Failed to complete task: ${res.status}`)
+  }
+
+  return res.json()
+}
+
+export async function getHabits() {
+  const auth = getAuth()
+
+  const res = await fetch(`${API_URL}/habits`, {
+    headers: {
+      Authorization: `Bearer ${auth?.idToken ?? ""}`,
+      "Content-Type": "application/json",
+    },
+  })
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch habits: ${res.status}`)
+  }
+
+  return res.json()
+}
+
+export async function createHabit(habitInput) {
+  const auth = getAuth()
+  const payload =
+    typeof habitInput === "string" ? { title: habitInput } : { ...habitInput }
+
+  const res = await fetch(`${API_URL}/habits`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${auth?.idToken ?? ""}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (!res.ok) {
+    throw new Error(`Failed to create habit: ${res.status}`)
+  }
+
+  return res.json()
+}
+
+export async function completeHabit(habitId, date) {
+  const auth = getAuth()
+
+  const res = await fetch(`${API_URL}/habits/${habitId}/complete`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${auth?.idToken ?? ""}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ date }),
+  })
+
+  if (!res.ok) {
+    throw new Error(`Failed to complete habit: ${res.status}`)
+  }
+
+  return res.json()
+}

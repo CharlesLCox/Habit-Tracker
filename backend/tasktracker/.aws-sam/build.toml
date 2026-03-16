@@ -7,6 +7,6 @@ architecture = "x86_64"
 handler = "src/handlers/get-all-items.getAllItemsHandler"
 manifest_hash = "ee290a0c319d23335b4026c9f83c4881"
 packagetype = "Zip"
-functions = ["GetTasksFunction", "CreateTaskFunction", "DeleteTaskFunction"]
+functions = ["GetTasksFunction", "CreateTaskFunction", "DeleteTaskFunction", "CompleteTaskFunction", "GetHabitsFunction", "CreateHabitFunction", "CompleteHabitFunction"]
 
 [layer_build_definitions]
