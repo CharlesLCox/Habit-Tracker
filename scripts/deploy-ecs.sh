@@ -36,7 +36,7 @@ echo "Logging in to ECR: ${ECR_REGISTRY}"
 aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ECR_REGISTRY}"
 
 echo "Building Docker image: ${IMAGE_URI}"
-docker build -t "${IMAGE_URI}" .
+docker build --provenance=false --sbom=false -t "${IMAGE_URI}" .
 
 echo "Pushing Docker image: ${IMAGE_URI}"
 docker push "${IMAGE_URI}"

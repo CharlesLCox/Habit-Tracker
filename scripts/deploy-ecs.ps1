@@ -73,7 +73,7 @@ $loginCmd = "aws ecr get-login-password --region $AwsRegion | docker login --use
 Invoke-External -Exe "cmd.exe" -Arguments @("/d", "/c", $loginCmd) -FailureMessage "Docker login to ECR failed. Ensure Docker daemon is running and AWS account/region/permissions are correct"
 
 Write-Host "Building Docker image: $ImageUri"
-Invoke-External -Exe "docker" -Arguments @("build", "-t", $ImageUri, ".") -FailureMessage "Docker build failed"
+Invoke-External -Exe "docker" -Arguments @("build", "--provenance=false", "--sbom=false", "-t", $ImageUri, ".") -FailureMessage "Docker build failed"
 
 Write-Host "Pushing Docker image: $ImageUri"
 Invoke-External -Exe "docker" -Arguments @("push", $ImageUri) -FailureMessage "Docker push failed"
