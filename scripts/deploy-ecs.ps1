@@ -24,7 +24,16 @@ function Get-ExternalText {
   if ($LASTEXITCODE -ne 0) {
     throw "$FailureMessage (exit code $LASTEXITCODE)."
   }
-  return (($result | Out-String).Trim())
+
+  if ($null -eq $result) {
+    return ""
+  }
+
+  if ($result -is [System.Array]) {
+    return (($result | ForEach-Object { [string]$_ }) -join "`n").Trim()
+  }
+
+  return ([string]$result).Trim()
 }
 
 $AwsRegion = if ($env:AWS_REGION) { $env:AWS_REGION } else { "us-east-2" }
