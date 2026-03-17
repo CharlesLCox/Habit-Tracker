@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   Badge,
   Box,
@@ -24,33 +24,13 @@ import {
   Trash2,
   Users,
 } from "lucide-react"
+import {
+  runCompleteShake,
+  SUCCESS_BURST_COLORS,
+  SUCCESS_BURST_PARTICLES,
+} from "../ui/completionEffects"
 
 const MotionDiv = motion.div
-const SUCCESS_BURST_PARTICLES = Array.from({ length: 32 }, (_, index) => {
-  const angle = index * 18
-  const radians = (angle * Math.PI) / 180
-  const outwardX = Math.cos(radians)
-  const outwardY = Math.sin(radians)
-  const edgeDistance = 62 + (index % 3) * 3
-
-  return {
-    angle,
-    outwardX,
-    outwardY,
-    startX: 50 + outwardX * edgeDistance,
-    startY: 50 + outwardY * edgeDistance,
-  }
-})
-const SUCCESS_BURST_COLORS = [
-  "#22c55e",
-  "#06b6d4",
-  "#3b82f6",
-  "#a855f7",
-  "#f59e0b",
-  "#ef4444",
-  "#10b981",
-  "#f97316",
-]
 
 const categoryStyleByName = {
   health: { label: "Health", palette: "green", rgb: [34, 197, 94] },
@@ -244,6 +224,9 @@ export default function TaskCard({
   const [nowMs, setNowMs] = useState(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [successBurstTick, setSuccessBurstTick] = useState(0)
+  const [isCompletionShaking, setIsCompletionShaking] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const completionShakeTimeoutRef = useRef(null)
 
   const isCompleted = task.completed === true
   const categoryStyle = getCategoryStyle(task.category)
@@ -291,8 +274,18 @@ export default function TaskCard({
   }, [])
 
   useEffect(() => {
+    return () => {
+      if (completionShakeTimeoutRef.current) {
+        clearTimeout(completionShakeTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
     if (!shakeConfig) {
-      shakeControls.stop()
+      if (!isCompletionShaking) {
+        shakeControls.stop()
+      }
       return undefined
     }
 
@@ -325,7 +318,34 @@ export default function TaskCard({
     const intervalId = setInterval(runShake, shakeConfig.intervalMs)
 
     return () => clearInterval(intervalId)
-  }, [shakeConfig, shakeControls])
+  }, [isCompletionShaking, shakeConfig, shakeControls])
+
+  async function handleCompleteTask() {
+    if (isCompleted || isSubmitting) {
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const didComplete = toggle ? await toggle(task.taskId, true) : true
+
+      if (didComplete) {
+        runSuccessBurst()
+        setIsCompletionShaking(true)
+        runCompleteShake(shakeControls)
+        if (completionShakeTimeoutRef.current) {
+          clearTimeout(completionShakeTimeoutRef.current)
+        }
+        completionShakeTimeoutRef.current = setTimeout(() => {
+          setIsCompletionShaking(false)
+          completionShakeTimeoutRef.current = null
+        }, 420)
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <MotionDiv animate={shakeControls} style={{ width: "100%", position: "relative" }}>
@@ -515,15 +535,8 @@ export default function TaskCard({
           }}
           aria-label={isCompleted ? "Task completed" : "Mark task complete"}
           zIndex={2}
-          disabled={isCompleted}
-          onClick={() => {
-            if (isCompleted) {
-              return
-            }
-
-            runSuccessBurst()
-            toggle(task.taskId, true)
-          }}
+          disabled={isCompleted || isSubmitting}
+          onClick={handleCompleteTask}
         >
           {isCompleted ? <Check size={16} /> : <Plus size={16} />}
         </Button>

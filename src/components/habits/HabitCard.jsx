@@ -3,6 +3,11 @@ import { Badge, Box, Button, HStack, Text, VStack } from "@chakra-ui/react"
 import dayjs from "dayjs"
 import { motion, useAnimationControls } from "framer-motion"
 import { BookOpen, Check, Cog, Flame, Hand, Heart, Plus, Users } from "lucide-react"
+import {
+  runCompleteShake,
+  SUCCESS_BURST_COLORS,
+  SUCCESS_BURST_PARTICLES,
+} from "../ui/completionEffects"
 
 const dayOrder = [
   "Sunday",
@@ -23,31 +28,6 @@ const categoryColorByName = {
 }
 
 const MotionDiv = motion.div
-const SUCCESS_BURST_PARTICLES = Array.from({ length: 42 }, (_, index) => {
-  const angle = index * 18
-  const radians = (angle * Math.PI) / 180
-  const outwardX = Math.cos(radians)
-  const outwardY = Math.sin(radians)
-  const edgeDistance = 45 + (index % 3) * 2.5
-
-  return {
-    angle,
-    outwardX,
-    outwardY,
-    startX: 50 + outwardX * edgeDistance,
-    startY: 50 + outwardY * edgeDistance,
-  }
-})
-const SUCCESS_BURST_COLORS = [
-  "#22c55e",
-  "#06b6d4",
-  "#3b82f6",
-  "#a855f7",
-  "#f59e0b",
-  "#ef4444",
-  "#10b981",
-  "#f97316",
-]
 
 function getCategoryColorPalette(category) {
   if (!category) {
@@ -155,17 +135,6 @@ export default function HabitCard({ habit, selectedDate, onComplete }) {
   const cardBackground = isMarked ? `${categoryColor}.600` : `${categoryColor}.800`
   const cardBorder = isMarked ? `${categoryColor}.800` : `${categoryColor}`
 
-  function runCompleteShake() {
-    shakeControls.start({
-      x: [0, -8, 8, -6, 6, 0],
-      rotate: [0, -1.2, 1.2, -0.9, 0.9, 0],
-      transition: {
-        duration: 0.38,
-        ease: "easeInOut",
-      },
-    })
-  }
-
   function runSuccessBurst() {
     setSuccessBurstTick((previousTick) => previousTick + 1)
   }
@@ -189,7 +158,7 @@ export default function HabitCard({ habit, selectedDate, onComplete }) {
 
       if (didComplete) {
         runSuccessBurst()
-        runCompleteShake()
+        runCompleteShake(shakeControls)
       }
     } finally {
       setIsSubmitting(false)

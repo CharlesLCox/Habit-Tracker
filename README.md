@@ -55,12 +55,31 @@ Optional parameters:
 - `IMAGE_TAG` (defaults to Jenkins build number)
 - `WAIT_FOR_STABILITY` (default `true`)
 - `RUN_FRONTEND_LINT` (default `false`)
+- `ENABLE_GITHUB_STATUS` (default `true`)
+- `GITHUB_STATUS_CONTEXT` (default `ci/jenkins/ecs`)
 
 ### Required Jenkins Plugins
 
 - Pipeline
 - Credentials Binding
 - AWS Credentials plugin (`AmazonWebServicesCredentialsBinding`)
+- GitHub plugin (for `githubNotify` status updates)
+
+### GitHub Real-Time Build Status
+
+The dedicated ECS pipeline (`jenkins/Jenkinsfile.ecs`) can publish commit/PR status updates:
+
+- `PENDING` when build starts
+- `SUCCESS` when build passes
+- `FAILURE` when build fails
+
+To enable this in Jenkins/GitHub:
+
+1. Install Jenkins `GitHub` plugin.
+2. Configure Jenkins GitHub connection/credentials.
+3. Use a Multibranch Pipeline or Pipeline from SCM pointing to this repo.
+4. Set `ENABLE_GITHUB_STATUS=true` (default).
+5. Optionally customize `GITHUB_STATUS_CONTEXT` (for example `ci/jenkins/ecs`).
 
 ### Optional S3 Deploy Parameters
 

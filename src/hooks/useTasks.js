@@ -40,7 +40,7 @@ export default function useTasks() {
 
   const toggleTask = async (taskId, checked) => {
     if (checked !== true) {
-      return
+      return false
     }
 
     setTasks((prev) =>
@@ -55,6 +55,7 @@ export default function useTasks() {
       setTasks((prev) =>
         prev.map((task) => (task.taskId === taskId ? updatedTask : task))
       )
+      return true
     } catch (error) {
       console.error("Failed to complete task:", error)
       setTasks((prev) =>
@@ -62,6 +63,7 @@ export default function useTasks() {
           task.taskId === taskId ? { ...task, completed: false } : task
         )
       )
+      return false
     }
   }
 

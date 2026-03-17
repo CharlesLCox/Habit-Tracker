@@ -1,3 +1,16 @@
+def notifyGithubStatus(String state, String context, String description) {
+  try {
+    githubNotify(
+      status: state,
+      context: context,
+      description: description,
+      targetUrl: env.BUILD_URL
+    )
+  } catch (err) {
+    echo "GitHub status notification skipped: ${err.getClass().getSimpleName()} - ${err.getMessage()}"
+  }
+}
+
 pipeline {
   agent any
 
@@ -63,6 +76,16 @@ pipeline {
       defaultValue: false,
       description: 'Run frontend lint before build'
     )
+    booleanParam(
+      name: 'ENABLE_GITHUB_STATUS',
+      defaultValue: true,
+      description: 'Publish pending/success/failure build status to GitHub'
+    )
+    string(
+      name: 'GITHUB_STATUS_CONTEXT',
+      defaultValue: 'ci/jenkins/ecs',
+      description: 'GitHub status context label shown on commits/PRs'
+    )
   }
 
   environment {
@@ -73,6 +96,15 @@ pipeline {
     stage('Checkout') {
       steps {
         checkout scm
+        script {
+          if (params.ENABLE_GITHUB_STATUS) {
+            notifyGithubStatus(
+              'PENDING',
+              params.GITHUB_STATUS_CONTEXT,
+              "Build #${env.BUILD_NUMBER} is running"
+            )
+          }
+        }
       }
     }
 
@@ -161,6 +193,28 @@ pipeline {
   }
 
   post {
+    success {
+      script {
+        if (params.ENABLE_GITHUB_STATUS) {
+          notifyGithubStatus(
+            'SUCCESS',
+            params.GITHUB_STATUS_CONTEXT,
+            "Build #${env.BUILD_NUMBER} passed"
+          )
+        }
+      }
+    }
+    failure {
+      script {
+        if (params.ENABLE_GITHUB_STATUS) {
+          notifyGithubStatus(
+            'FAILURE',
+            params.GITHUB_STATUS_CONTEXT,
+            "Build #${env.BUILD_NUMBER} failed"
+          )
+        }
+      }
+    }
     always {
       deleteDir()
     }
