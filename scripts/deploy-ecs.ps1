@@ -69,11 +69,8 @@ $EcrRegistry = "$AwsAccountId.dkr.ecr.$AwsRegion.amazonaws.com"
 $ImageUri = "{0}/{1}:{2}" -f $EcrRegistry, $EcrRepository, $ImageTag
 
 Write-Host "Logging in to ECR: $EcrRegistry"
-$ecrPassword = Get-ExternalText -Exe "aws" -Arguments @("ecr", "get-login-password", "--region", $AwsRegion) -FailureMessage "Failed to get ECR login password"
-$ecrPassword | docker login --username AWS --password-stdin $EcrRegistry
-if ($LASTEXITCODE -ne 0) {
-  throw "Docker login to ECR failed. Ensure repository/account/region are correct and AWS user has ECR permissions."
-}
+$loginCmd = "aws ecr get-login-password --region $AwsRegion | docker login --username AWS --password-stdin $EcrRegistry"
+Invoke-External -Exe "cmd.exe" -Arguments @("/d", "/c", $loginCmd) -FailureMessage "Docker login to ECR failed. Ensure Docker daemon is running and AWS account/region/permissions are correct"
 
 Write-Host "Building Docker image: $ImageUri"
 Invoke-External -Exe "docker" -Arguments @("build", "-t", $ImageUri, ".") -FailureMessage "Docker build failed"
