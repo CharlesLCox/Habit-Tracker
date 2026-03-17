@@ -1,10 +1,11 @@
 import { Avatar, Button, HStack, Menu, Text } from "@chakra-ui/react"
 import { useNavigate } from "react-router-dom"
-import { getProfileName, logout } from "../../services/auth"
+import { getProfileName, getUserRoleLabel, logout } from "../../services/auth"
 
 export default function ProfileMenu() {
   const navigate = useNavigate()
   const profileName = getProfileName()
+  const userRoleLabel = getUserRoleLabel()
   const profileInitial = profileName?.charAt(0)?.toUpperCase() || "U"
 
   function handleLogout() {
@@ -26,6 +27,9 @@ export default function ProfileMenu() {
       </Menu.Trigger>
       <Menu.Positioner>
         <Menu.Content minW="200px">
+          <Menu.Item value="role" disabled>
+            {userRoleLabel}
+          </Menu.Item>
           <Menu.Item value="profile" disabled>
             Profile (coming soon)
           </Menu.Item>

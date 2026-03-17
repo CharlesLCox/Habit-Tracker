@@ -120,3 +120,25 @@ export function getProfileName() {
     "Profile"
   )
 }
+
+export function isAdminUser() {
+  const auth = getAuth()
+  const claims = parseJwtPayload(auth?.idToken)
+  const groups = claims?.["cognito:groups"]
+
+  if (Array.isArray(groups)) {
+    return groups.some(
+      (group) => typeof group === "string" && group.toLowerCase() === "admins"
+    )
+  }
+
+  if (typeof groups === "string") {
+    return groups.toLowerCase() === "admins"
+  }
+
+  return false
+}
+
+export function getUserRoleLabel() {
+  return isAdminUser() ? "Administrator" : "Standard User"
+}
