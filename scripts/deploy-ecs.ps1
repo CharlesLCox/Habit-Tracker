@@ -87,7 +87,7 @@ try {
 
   Write-Host "Reading current task definition: $EcsTaskFamily"
   $taskDefJson = Get-ExternalText -Exe "aws" -Arguments @("ecs", "describe-task-definition", "--task-definition", $EcsTaskFamily, "--output", "json") -FailureMessage "Failed to describe ECS task definition '$EcsTaskFamily'"
-  $taskDefJson | Set-Content -Path $currentTaskDef -Encoding utf8
+  [System.IO.File]::WriteAllText($currentTaskDef, $taskDefJson, [System.Text.UTF8Encoding]::new($false))
 
   $nodeArgs = @(
     "scripts/render-ecs-task-def.mjs",

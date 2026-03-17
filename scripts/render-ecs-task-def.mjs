@@ -39,7 +39,8 @@ if (!inputPath || !outputPath || !imageUri) {
 }
 
 const raw = fs.readFileSync(inputPath, "utf8");
-const parsed = JSON.parse(raw);
+const normalizedRaw = raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
+const parsed = JSON.parse(normalizedRaw);
 const taskDef = parsed.taskDefinition ?? parsed;
 
 const allowedKeys = [
