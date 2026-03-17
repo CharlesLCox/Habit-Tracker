@@ -30,7 +30,7 @@ if ([string]::IsNullOrWhiteSpace($AwsAccountId)) {
 }
 
 $EcrRegistry = "$AwsAccountId.dkr.ecr.$AwsRegion.amazonaws.com"
-$ImageUri = "$EcrRegistry/$EcrRepository:$ImageTag"
+$ImageUri = "{0}/{1}:{2}" -f $EcrRegistry, $EcrRepository, $ImageTag
 
 Write-Host "Logging in to ECR: $EcrRegistry"
 aws ecr get-login-password --region $AwsRegion | docker login --username AWS --password-stdin $EcrRegistry

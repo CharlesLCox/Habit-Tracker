@@ -135,17 +135,40 @@ $env:IMAGE_TAG="manual-001"
 
 ## First-Time AWS ECS Setup (One-Time)
 
-1. Create an ECR repository:
+Use the bootstrap script to create:
+
+- ECR repository
+- ECS cluster
+- IAM roles for ECS task execution
+- Security groups
+- Application Load Balancer + target group + listener
+- ECS task definition + ECS service
+
+Linux/macOS:
 
 ```bash
-aws ecr create-repository --repository-name task-tracker-frontend --region us-east-2
+AWS_REGION=us-east-2 APP_NAME=task-tracker ./scripts/bootstrap-ecs.sh
 ```
 
-2. Create ECS resources (cluster, task definition, service, ALB target group/listener).
+Windows PowerShell:
 
-3. Ensure your ECS service points to the task definition family you pass as `ECS_TASK_FAMILY`.
+```powershell
+$env:AWS_REGION="us-east-2"
+$env:APP_NAME="task-tracker"
+.\scripts\bootstrap-ecs.ps1
+```
 
-4. Run Jenkins with `DEPLOY_ECS=true` and the ECS parameters filled in.
+Optional overrides:
+
+- `ECR_REPOSITORY`
+- `ECS_CLUSTER`
+- `ECS_SERVICE`
+- `ECS_TASK_FAMILY`
+- `ECS_CONTAINER_NAME`
+- `VPC_ID` and `SUBNET_IDS` (`"subnet-a subnet-b"`) if you do not want default VPC/subnets
+
+After it finishes, copy printed values into Jenkins parameters.
+Run Jenkins with `DEPLOY_ECS=true` (for root `Jenkinsfile`) or use `jenkins/Jenkinsfile.ecs`.
 
 On each deploy, Jenkins will:
 
